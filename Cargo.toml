@@ -10,3 +10,7 @@ edition = "2018"
 regex = "1"
 anyhow = "1"
 derive_builder = "0.9"
+
+[features]
+attributes = []
+

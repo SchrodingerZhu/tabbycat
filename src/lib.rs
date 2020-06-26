@@ -1,9 +1,13 @@
-pub mod graph;
 pub use graph::*;
+
+pub mod graph;
+
 #[cfg(test)]
 mod test {
-    use crate::Identity;
     use crate::Compass::NorthEast;
+    use crate::Identity;
+    #[cfg(feature = "attributes")]
+    use crate::attributes::*;
 
     #[test]
     fn codegen_compass() {
@@ -49,7 +53,18 @@ mod test {
             .add(I::id("color")?, I::id("red")?)
             .new_bracket()
             .add(I::id("size")?, I::from(12_isize));
-        Ok(assert_eq!("[name=abc;color=red;][size=12;]", attrlist.to_string()))
+        #[cfg(feature = "attributes")]
+            {
+                let attrlist = attrlist.add_pair(fontsize(12.0))
+                    .add_pair(label("test"))
+                    .add_pair(fillcolor(Color::Blue))
+                    .add_pair(arrowhead(ArrowShape::Orinv));
+                Ok(assert_eq!("[name=abc;color=red;][size=12;fontsize=12;label=\"test\";fillcolor=blue;arrowhead=orinv;]", attrlist.to_string()))
+            }
+        #[cfg(not(feature = "attributes"))]
+            {
+                Ok(assert_eq!("[name=abc;color=red;][size=12;]", attrlist.to_string()))
+            }
     }
 
 
@@ -82,7 +97,7 @@ mod test {
                 SubGraph::cluster(StmtList::new()
                     .add_node(Identity::id("c")?, None, None)
                     .add_node(Identity::id("d")?, None, None)
-                    ));
+                ));
         assert_eq!("a->b->{c;d;}[color=pink;]", edge.to_string());
         Ok(())
     }
@@ -104,7 +119,7 @@ mod test {
                             .arrow_to_node(Identity::from(4), None)
                             .arrow_to_node(Identity::from(5), None)
                             .arrow_to_node(Identity::from(6), None)
-                            .add_attribute(Identity::id("color")?, Identity::id("purple")?))
+                            .add_attribute(Identity::id("color")?, Identity::id("purple")?)),
                 ))
                 .add_node(Identity::from(7), None, None)
                 .add_edge(Edge::head_node(Identity::from(3), None)
