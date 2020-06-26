@@ -1,29 +1,29 @@
 pub mod graph;
-
+pub use graph::*;
 #[cfg(test)]
 mod test {
-    use crate::graph::Identity;
-    use crate::graph::Compass::NorthEast;
+    use crate::Identity;
+    use crate::Compass::NorthEast;
 
     #[test]
     fn codegen_compass() {
-        use crate::graph::Compass::*;
+        use crate::Compass::*;
         assert_eq!("n", North.to_string());
         assert_eq!("ne", NorthEast.to_string());
     }
 
     #[test]
     fn codegen_id() {
-        use crate::graph::Identity;
+        use crate::Identity;
         assert_eq!("a123", Identity::id("a123").unwrap().to_string());
         assert_eq!("\"123\"", Identity::quoted("123").to_string());
     }
 
     #[test]
     fn codegen_port() {
-        use crate::graph::Port;
-        use crate::graph::Identity as I;
-        use crate::graph::Compass as C;
+        use crate::Port;
+        use crate::Identity as I;
+        use crate::Compass as C;
         {
             let a = Port::id_compass(I::from(1.5), C::NorthEast);
             assert_eq!(":1.5:ne", a.to_string())
@@ -42,8 +42,8 @@ mod test {
 
     #[test]
     fn codegen_attrlist() -> anyhow::Result<()> {
-        use crate::graph::Identity as I;
-        use crate::graph::AttrList;
+        use crate::Identity as I;
+        use crate::AttrList;
         let attrlist = AttrList::new()
             .add(I::id("name")?, I::id("abc")?)
             .add(I::id("color")?, I::id("red")?)
@@ -55,7 +55,7 @@ mod test {
 
     #[test]
     fn codegen_subgraph() {
-        use crate::graph::{Stmt, StmtList, SubGraph, Identity, Port, Compass};
+        use crate::{Stmt, StmtList, SubGraph, Identity, Port, Compass};
         let g = SubGraph::SubGraph {
             id: Some(Identity::String("G")),
             stmts: Box::new(StmtList(
@@ -74,7 +74,7 @@ mod test {
 
     #[test]
     fn codegen_edge() -> anyhow::Result<()> {
-        use crate::graph::{SubGraph, StmtList, Edge};
+        use crate::{SubGraph, StmtList, Edge};
         let edge = Edge::head_node(Identity::id("a")?, None)
             .add_attribute(Identity::id("color")?, Identity::id("pink")?)
             .arrow_to_node(Identity::id("b")?, None)
@@ -89,7 +89,7 @@ mod test {
 
     #[test]
     fn codegen_graph() -> anyhow::Result<()> {
-        use crate::graph::*;
+        use crate::*;
         let g = GraphBuilder::default()
             .graph_type(GraphType::DiGraph)
             .strict(true)
