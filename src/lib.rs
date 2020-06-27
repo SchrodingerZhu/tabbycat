@@ -1,7 +1,7 @@
 pub use graph::*;
-
-pub mod graph;
-
+mod graph;
+#[cfg(feature="attributes")]
+pub mod attributes;
 #[cfg(test)]
 mod test {
     use crate::Compass::NorthEast;
