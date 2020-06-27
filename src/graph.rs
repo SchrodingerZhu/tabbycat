@@ -364,7 +364,9 @@ impl<'a> std::fmt::Display for Identity<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Identity::*;
         match self {
+            #[cfg(feature = "attributes")]
             RGBA(r, g, b, a) => write!(f, "#{:x}{:x}{:x}{:x}", r, g, b, a),
+            #[cfg(feature = "attributes")]
             HSV(h, s, v) => write!(f, "{},+{},+{}", h, s, v),
             String(id) => write!(f, "{}", id),
             Usize(id) => write!(f, "{}", id),
