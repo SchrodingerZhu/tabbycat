@@ -1,5 +1,16 @@
 #![allow(non_snake_case)]
-
+//! This module implements a subset of dot language [attributes](https://graphviz.org/doc/info/attrs.html).
+//! These functions will generate some predefined `AttrPair`s that be used together with
+//! the `add_attrpair` function of `Edge` and the `add_pair` function of `AttrList`.
+//! Notice that only an incomplete subset is implemented due to the limitations of the function prototype
+//! and type system.
+//! To add other attributes, you can use an unsafe way to construct an identity pair.
+//! ```
+//! use tabbycat::Identity;
+//! let my_pair = (Identity::String("label"), Identity::Quoted("test"));
+//! ```
+//! (Most of the time the safe way (`Identity::id`) should be good, but as we didn't provide a type for something like the
+//! [`lblString`](https://graphviz.org/doc/info/attrs.html#k:lblString), you may want to add a unquoted string using the *unsafe* way.)
 use std::hint::unreachable_unchecked;
 
 use crate::{AttrPair, Identity};
@@ -190,7 +201,7 @@ pub fn arrowtail4<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape
     (Identity::String("arrowtail"), Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), Some(arrow_str(c)), Some(arrow_str(d))]))
 }
 
-
+/// Shapes of the node
 #[derive(Debug)]
 pub enum Shape {
     Box,
@@ -254,6 +265,8 @@ pub enum Shape {
     Lpromoter,
 }
 
+/// Shapes of the arrow. Notice that the dot language has a [special syntax](https://graphviz.org/doc/info/arrows.html) for creating different arrow shapes.
+/// We actually expand all `[modifier] primitive shapes` here and you can you the functions like `arrowhead2`, `arrowhead3`, `arrowhead4` to repeat the patterns.
 pub enum ArrowShape {
     Olbox,
     Olcrow,
@@ -312,6 +325,10 @@ pub enum ArrowShape {
     Vee,
 }
 
+/// A list of [colors](https://graphviz.org/doc/info/colors.html) that can be used in the dot language.
+/// Notice that we are actually listing a union of `X11` colors and `SVG` colors, you should be aware of
+/// what color scheme you are really using.
+/// For unlisted colors, see the instructions above on how to implement your own attribute pairs.
 pub enum Color {
     Rgb(u8, u8, u8),
     Rgba(u8, u8, u8, u8),

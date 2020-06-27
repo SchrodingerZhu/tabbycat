@@ -2,25 +2,45 @@ use std::fmt::{Formatter, Result};
 
 use derive_builder::Builder;
 
+/// The list of attributes
 #[derive(Clone, Debug)]
 pub struct AttrList<'a> (pub(crate) Vec<Vec<(Identity<'a>, Identity<'a>)>>);
 
+/// The list of statements, including:
+/// - node declaration
+/// - edge declaration
+/// - subgraph declaration
+/// - global attributes
 #[derive(Clone, Debug)]
 pub struct StmtList<'a>(pub(crate) Vec<Stmt<'a>>);
 
+/// The types of graphs
 #[derive(Copy, Clone, Debug)]
 pub enum GraphType {
+    /// undirected graph
     Graph,
+    /// directed graph
     DiGraph,
 }
 
+/// The types of global attributes
 #[derive(Copy, Clone, Debug)]
 pub enum AttrType {
+    /// attributes for graph
     Graph,
+    /// attributes for node
     Node,
+    /// attributes for edge
     Edge,
 }
 
+/// An identity in the dot language. You are recommended to construct it in one of the following ways:
+/// - attributes method
+/// - `Identity::id` for checked id strings
+/// - `Identity::quoted` for quoted safe strings
+/// - `Identity::from` for numeral types
+///
+/// However, if you need to create some special identities like `HTML`, you can use `Identity::String` directly.
 #[derive(Clone, Debug)]
 pub enum Identity<'a> {
     String(&'a str),
@@ -40,14 +60,15 @@ pub enum Identity<'a> {
     Float(f32),
     Double(f64),
     Quoted(&'a str),
-    #[cfg(feature="attributes")]
+    #[cfg(feature = "attributes")]
     ArrowName([Option<&'a str>; 4]),
-    #[cfg(feature="attributes")]
+    #[cfg(feature = "attributes")]
     RGBA(u8, u8, u8, u8),
-    #[cfg(feature="attributes")]
+    #[cfg(feature = "attributes")]
     HSV(f32, f32, f32),
 }
 
+/// Graph in the dot language. You can construct it with the `GraphBuilder`.
 #[derive(Builder, Clone, Debug)]
 #[builder(pattern = "owned")]
 pub struct Graph<'a> {
@@ -58,6 +79,9 @@ pub struct Graph<'a> {
     stmts: StmtList<'a>,
 }
 
+/// A single line of statement. You should not construct it directly in most cases.
+/// We still expose this type because we only implement a subset of dot language so
+/// you may need to write special statements on your own.
 #[derive(Clone, Debug)]
 pub enum Stmt<'a> {
     Edge(Edge<'a>),
@@ -71,6 +95,7 @@ pub enum Stmt<'a> {
     SubGraph(SubGraph<'a>),
 }
 
+/// An edge in the dot language.
 #[derive(Clone, Debug)]
 pub struct Edge<'a> {
     pub(crate) node: EdgeNode<'a>,
@@ -78,18 +103,21 @@ pub struct Edge<'a> {
     pub(crate) attr: Option<AttrList<'a>>,
 }
 
+/// The tag of the edge operation
 #[derive(Copy, Clone, Debug)]
 pub enum EdgeOp {
     Arrow,
     Line,
 }
 
+/// A body part of edge
 #[derive(Clone, Debug)]
 pub struct EdgeBody<'a> {
     pub(crate) node: EdgeNode<'a>,
     pub(crate) op: EdgeOp,
 }
 
+/// A node of the edge
 #[derive(Clone, Debug)]
 pub enum EdgeNode<'a> {
     Node {
@@ -99,6 +127,7 @@ pub enum EdgeNode<'a> {
     SubGraph(SubGraph<'a>),
 }
 
+/// A subgraph in the dot language
 #[derive(Clone, Debug)]
 pub enum SubGraph<'a> {
     SubGraph {
@@ -109,20 +138,32 @@ pub enum SubGraph<'a> {
 }
 
 impl<'a> SubGraph<'a> {
+    /// create a cluster, for example you may need to following structure in your graph:
+    /// ```plaintext
+    /// {A;B;}
+    /// ```
     pub fn cluster(list: StmtList<'a>) -> Self {
         SubGraph::Cluster(Box::new(list))
     }
+    /// create a subgraph, which will output something like:
+    /// ```plaintext
+    /// subgraph G {
+    ///     A -> B;
+    /// }
+    /// ```
     pub fn subgraph(id: Option<Identity<'a>>, list: StmtList<'a>) -> Self {
         SubGraph::SubGraph { id, stmts: Box::new(list) }
     }
 }
 
+/// The port suffix.
 #[derive(Clone, Debug)]
 pub enum Port<'a> {
     ID(Identity<'a>, Option<Compass>),
     Compass(Compass),
 }
 
+/// Directions
 #[derive(Copy, Clone, Debug)]
 pub enum Compass {
     North,
@@ -246,6 +287,8 @@ impl<'a> From<f64> for Identity<'a> {
 }
 
 impl<'a> Identity<'a> {
+    /// create a checked id string, the lexical rule is:
+    /// `^[a-zA-Z\x{80}-\x{ff}_][a-zA-Z\x{80}-\x{ff}\d_]*$`
     pub fn id(data: &'a str) -> anyhow::Result<Self> {
         static PATTERN: &str = r#"^[a-zA-Z\x{80}-\x{ff}_][a-zA-Z\x{80}-\x{ff}\d_]*$"#;
         let re = regex::Regex::new(PATTERN).unwrap();
@@ -255,20 +298,22 @@ impl<'a> Identity<'a> {
             Err(anyhow::anyhow!("invalid identity format"))
         }
     }
+    /// create a quoted string
     pub fn quoted(data: &'a str) -> Self {
         Identity::Quoted(data)
     }
 }
 
 impl<'a> Port<'a> {
+    /// corresponds to `:id`
     pub fn id(i: Identity<'a>) -> Self {
         Port::ID(i, None)
     }
-
+    /// corresponds to `:id:<direction>`
     pub fn id_compass(i: Identity<'a>, c: Compass) -> Self {
         Port::ID(i, Some(c))
     }
-
+    /// corresponds to `:<direction>`
     pub fn compass(c: Compass) -> Self {
         Port::Compass(c)
     }
@@ -338,7 +383,7 @@ impl<'a> std::fmt::Display for Identity<'a> {
             I128(id) => write!(f, "{}", id),
             U128(id) => write!(f, "{}", id),
             Bool(flag) => write!(f, "{}", flag),
-            #[cfg(feature="attributes")]
+            #[cfg(feature = "attributes")]
             ArrowName(names) => {
                 names.iter().fold(Ok(()), |acc, x| {
                     acc.and(
