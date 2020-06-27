@@ -66,6 +66,10 @@ pub enum Identity<'a> {
     RGBA(u8, u8, u8, u8),
     #[cfg(feature = "attributes")]
     HSV(f32, f32, f32),
+    #[cfg(feature = "attributes")]
+    Point2D(f32, f32, bool),
+    #[cfg(feature = "attributes")]
+    Point3D(f32, f32, f32, bool),
 }
 
 /// Graph in the dot language. You can construct it with the `GraphBuilder`.
@@ -365,9 +369,25 @@ impl<'a> std::fmt::Display for Identity<'a> {
         use Identity::*;
         match self {
             #[cfg(feature = "attributes")]
-            RGBA(r, g, b, a) => write!(f, "#{:x}{:x}{:x}{:x}", r, g, b, a),
+            RGBA(r, g, b, a) => write!(f, "\"#{:x}{:x}{:x}{:x}\"", r, g, b, a),
             #[cfg(feature = "attributes")]
-            HSV(h, s, v) => write!(f, "{},+{},+{}", h, s, v),
+            HSV(h, s, v) => write!(f, "\"{},+{},+{}\"", h, s, v),
+            #[cfg(feature = "attributes")]
+            Point2D(x, y, fixed) =>
+                write!(f, "\"{},{}\"", x, y)
+                    .and(
+                        if *fixed {
+                            write!(f, "!")
+                        } else { Ok(()) }
+                    ),
+            #[cfg(feature = "attributes")]
+            Point3D(x, y, z, fixed) =>
+                write!(f, "\"{},{},{}\"", x, y, z)
+                    .and(
+                        if *fixed {
+                            write!(f, "!")
+                        } else { Ok(()) }
+                    ),
             String(id) => write!(f, "{}", id),
             Usize(id) => write!(f, "{}", id),
             Float(id) => write!(f, "{}", id),

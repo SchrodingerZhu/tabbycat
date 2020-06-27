@@ -1,12 +1,13 @@
 [package]
 name = "tabbycat"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["SchrodingerZhu <i@zhuyi.fan>"]
 edition = "2018"
 license = "MIT"
 description = "A rust crate for generating graph scripts with dot language"
 categories = ["visualization", "graphics"]
 readme = "README.md"
+keywords = ["dot", "graphviz", "visual","render"]
 repository = "https://github.com/SchrodingerZhu/tabbycat"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

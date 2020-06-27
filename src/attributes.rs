@@ -169,6 +169,20 @@ attribute_from!(fillcolor, Color);
 attribute_from!(labelfontcolor, Color);
 attribute_from!(pencolor, Color);
 attribute_from!(shape, Shape);
+attribute_from!(style, Style);
+attribute_from!(dir, DirType);
+attribute_from!(smoothing, SmoothType);
+attribute_from!(rankdir, RankDir);
+attribute_from!(rank, RankType);
+attribute_from!(quadtree, QuadType);
+attribute_from!(pagedir, PageDir);
+attribute_from!(clusterrank, ClusterMode);
+attribute_from!(outputorder, OutputMode);
+attribute_from!(head_lp, Point);
+attribute_from!(lp, Point);
+attribute_from!(pos, Point);
+attribute_from!(tail_lp, Point);
+attribute_from!(xlp, Point);
 pub fn arrowhead<'a>(value: ArrowShape) -> AttrPair<'a> {
     (Identity::String("arrowhead"), Identity::ArrowName([Some(arrow_str(value)), None, None, None]))
 }
@@ -200,6 +214,235 @@ pub fn arrowtail3<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair<'
 pub fn arrowtail4<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) -> AttrPair<'a> {
     (Identity::String("arrowtail"), Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), Some(arrow_str(c)), Some(arrow_str(d))]))
 }
+/// Smoothing Method
+#[derive(Debug)]
+pub enum SmoothType {
+    None,
+    AvgDist,
+    GraphDist,
+    PowerDist,
+    RNG,
+    Spring,
+    Triangle,
+}
+
+impl<'a> From<SmoothType> for Identity<'a> {
+    fn from(dir: SmoothType) -> Self {
+        Identity::String(match dir {
+            SmoothType::None => "none",
+            SmoothType::AvgDist => "avg_dist",
+            SmoothType::GraphDist => "graph_dist",
+            SmoothType::PowerDist => "power_dist",
+            SmoothType::RNG => "rng",
+            SmoothType::Spring => "spring",
+            SmoothType::Triangle => "triangle"
+        })
+    }
+}
+/// Rank Direction
+#[derive(Debug)]
+pub enum RankDir {
+    TB,
+    LR,
+    BT,
+    RL,
+}
+
+impl<'a> From<RankDir> for Identity<'a> {
+    fn from(dir: RankDir) -> Self {
+        Identity::String(match dir {
+            RankDir::TB => "TB",
+            RankDir::LR => "LR",
+            RankDir::BT => "BT",
+            RankDir::RL => "RL",
+        })
+    }
+}
+
+/// Ranking method
+#[derive(Debug)]
+pub enum RankType {
+    Same,
+    Min,
+    Source,
+    Max,
+    Sink,
+}
+
+impl<'a> From<RankType> for Identity<'a> {
+    fn from(dir: RankType) -> Self {
+        Identity::String(match dir {
+            RankType::Same => "same",
+            RankType::Min => "min",
+            RankType::Source => "source",
+            RankType::Max => "max",
+            RankType::Sink => "sink",
+        })
+    }
+}
+
+/// Quadtree Algorithm
+#[derive(Debug)]
+pub enum QuadType {
+    Normal,
+    Fast,
+    None,
+}
+
+impl<'a> From<QuadType> for Identity<'a> {
+    fn from(dir: QuadType) -> Self {
+        Identity::String(match dir {
+            QuadType::None => "none",
+            QuadType::Normal => "normal",
+            QuadType::Fast => "fast",
+        })
+    }
+}
+
+/// Point type in the dot language
+pub enum Point {
+    Point2D {
+        x: f32,
+        y: f32,
+        fixed: bool,
+    },
+    Point3D {
+        x: f32,
+        y: f32,
+        z: f32,
+        fixed: bool,
+    },
+}
+
+impl<'a> From<Point> for Identity<'a> {
+    fn from(dir: Point) -> Self {
+        match dir {
+            Point::Point2D {
+                x, y, fixed
+            } => Identity::Point2D(x, y, fixed),
+            Point::Point3D {
+                x, y, z, fixed
+            } => Identity::Point3D(x, y, z, fixed),
+        }
+    }
+}
+/// Paging Direction
+#[derive(Debug)]
+pub enum PageDir {
+    BL,
+    BR,
+    TL,
+    TR,
+    RB,
+    RT,
+    LB,
+    LT,
+}
+
+impl<'a> From<PageDir> for Identity<'a> {
+    fn from(dir: PageDir) -> Self {
+        Identity::String(match dir {
+            PageDir::BL => "BL",
+            PageDir::BR => "BR",
+            PageDir::TL => "TL",
+            PageDir::TR => "TR",
+            PageDir::RB => "RB",
+            PageDir::RT => "RT",
+            PageDir::LB => "LB",
+            PageDir::LT => "LT"
+        })
+    }
+}
+/// Clustering Mode
+#[derive(Debug)]
+pub enum ClusterMode {
+    Local,
+    Global,
+    None,
+}
+
+impl<'a> From<ClusterMode> for Identity<'a> {
+    fn from(dir: ClusterMode) -> Self {
+        Identity::String(match dir {
+            ClusterMode::Local => "local",
+            ClusterMode::Global => "global",
+            ClusterMode::None => "none",
+        })
+    }
+}
+
+/// Output mode
+#[derive(Debug)]
+pub enum OutputMode {
+    BreadthFirst,
+    NodesFirst,
+    EdgesFirst,
+}
+
+impl<'a> From<OutputMode> for Identity<'a> {
+    fn from(dir: OutputMode) -> Self {
+        Identity::String(match dir {
+            OutputMode::BreadthFirst => "breadthfirst",
+            OutputMode::NodesFirst => "nodesfirst",
+            OutputMode::EdgesFirst => "edgesfirst",
+        })
+    }
+}
+
+/// Arrow direction
+#[derive(Debug)]
+pub enum DirType {
+    Forward,
+    Back,
+    Both,
+    None,
+}
+
+impl<'a> From<DirType> for Identity<'a> {
+    fn from(dir: DirType) -> Self {
+        Identity::String(match dir {
+            DirType::Forward => "forward",
+            DirType::Back => "back",
+            DirType::Both => "both",
+            DirType::None => "none",
+        })
+    }
+}
+
+/// Styles, see the [document](https://www.graphviz.org/doc/info/attrs.html#k:style)
+#[derive(Debug)]
+pub enum Style {
+    None,
+    Invisible,
+    Solid,
+    Dashed,
+    Dotted,
+    Bold,
+    Rounded,
+    Diagonals,
+    Filled,
+    Striped,
+    Wedged,
+}
+
+impl<'a> From<Style> for Identity<'a> {
+    fn from(dir: Style) -> Self {
+        Identity::String(match dir {
+            Style::None => "none",
+            Style::Invisible => "invisible",
+            Style::Solid => "solid",
+            Style::Dashed => "dashed",
+            Style::Dotted => "dotted",
+            Style::Bold => "bold",
+            Style::Rounded => "rounded",
+            Style::Diagonals => "diagonals",
+            Style::Filled => "filled",
+            Style::Striped => "striped",
+            Style::Wedged => "wedged",
+        })
+    }
+}
+
 
 /// Shapes of the node
 #[derive(Debug)]
