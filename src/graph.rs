@@ -534,24 +534,33 @@ impl<'a> std::fmt::Display for Edge<'a> {
 }
 
 impl<'a> AttrList<'a> {
+    /// Create an empty attribute list
     pub fn new() -> Self {
         AttrList(Vec::new())
     }
+    /// The dot language support multiple attribute lists with a syntax like:
+    /// ```dot
+    /// A->B [color=red;][label="abc";];
+    /// ```
+    /// This function is used to open a new bracket and later attributes will be added to the new one.
     pub fn new_bracket(mut self) -> Self {
         self.0.push(Vec::new());
         self
     }
-    pub fn extend<I: IntoIterator<Item=(Identity<'a>, Identity<'a>)>>(mut self, iter: I) -> Self {
+    /// Append a list of new attributes to the current bracket
+    pub fn extend<I: IntoIterator<Item=AttrPair<'a>>>(mut self, iter: I) -> Self {
         if self.0.is_empty() {
             self = self.new_bracket();
         }
         self.0.last_mut().unwrap().extend(iter);
         self
     }
-    pub fn extend_list<I: IntoIterator<Item=Vec<(Identity<'a>, Identity<'a>)>>>(mut self, iter: I) -> Self {
+    /// Add a new attribute list
+    pub fn extend_list<I: IntoIterator<Item=Vec<AttrPair<'a>>>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
+    /// Add a new attribute
     pub fn add(mut self, key: Identity<'a>, value: Identity<'a>) -> Self {
         if self.0.is_empty() {
             self = self.new_bracket();
@@ -559,26 +568,28 @@ impl<'a> AttrList<'a> {
         self.0.last_mut().unwrap().push((key, value));
         self
     }
+    /// Add a new attribute (in pair)
     pub fn add_pair(self, pair: AttrPair<'a>) -> Self {
         self.add(pair.0, pair.1)
     }
 }
 
 impl<'a> StmtList<'a> {
+    /// Create a new statement list
     pub fn new() -> Self {
         StmtList(Vec::new())
     }
-
+    /// Add a statement
     pub fn add(mut self, stmt: Stmt<'a>) -> Self {
         self.0.push(stmt);
         self
     }
-
+    /// Append a list a statements
     pub fn extend<I: IntoIterator<Item=Stmt<'a>>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
-
+    /// Add a node statement
     pub fn add_node(mut self, id: Identity<'a>, port: Option<Port<'a>>, attr: Option<AttrList<'a>>) -> Self {
         self.0.push(Stmt::Node {
             id,
@@ -587,7 +598,7 @@ impl<'a> StmtList<'a> {
         });
         self
     }
-
+    /// Add a global attribute
     pub fn add_attr(mut self, attr_type: AttrType, attr_list: AttrList<'a>) -> Self {
         self.0.push(Stmt::Attr(
             attr_type,
@@ -595,21 +606,21 @@ impl<'a> StmtList<'a> {
         ));
         self
     }
-
+    /// Add an edge statement
     pub fn add_edge(mut self, edge: Edge<'a>) -> Self {
         self.0.push(Stmt::Edge(
             edge
         ));
         self
     }
-
+    /// Add a subgraph statement
     pub fn add_subgraph(mut self, sub: SubGraph<'a>) -> Self {
         self.0.push(Stmt::SubGraph(
             sub
         ));
         self
     }
-
+    /// Add an equation
     pub fn add_equation(mut self, a: Identity<'a>, b: Identity<'a>) -> Self {
         self.0.push(Stmt::Equation(
             a, b,
@@ -619,6 +630,7 @@ impl<'a> StmtList<'a> {
 }
 
 impl<'a> Edge<'a> {
+    /// Start a new edge with a node
     pub fn head_node(id: Identity<'a>, port: Option<Port<'a>>) -> Self {
         Edge {
             node: EdgeNode::Node {
@@ -629,6 +641,7 @@ impl<'a> Edge<'a> {
             attr: None,
         }
     }
+    /// Start a new edge with a subgraph
     pub fn head_subgraph(sub: SubGraph<'a>) -> Self {
         Edge {
             node: EdgeNode::SubGraph(sub),
@@ -636,6 +649,8 @@ impl<'a> Edge<'a> {
             attr: None,
         }
     }
+    /// Connect to a new node with line
+    /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
     pub fn line_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
         self.body.push(
             EdgeBody {
@@ -648,6 +663,8 @@ impl<'a> Edge<'a> {
         );
         self
     }
+    /// Connect to a new subgraph with line
+    /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
     pub fn line_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
         self.body.push(
             EdgeBody {
@@ -657,6 +674,8 @@ impl<'a> Edge<'a> {
         );
         self
     }
+    /// Connect to a new node with arrow
+    /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
     pub fn arrow_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
         self.body.push(
             EdgeBody {
@@ -669,6 +688,8 @@ impl<'a> Edge<'a> {
         );
         self
     }
+    /// Connect to a new subgraph with arrow
+    /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
     pub fn arrow_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
         self.body.push(
             EdgeBody {
@@ -678,6 +699,7 @@ impl<'a> Edge<'a> {
         );
         self
     }
+    /// Add an attribute list to the edge
     pub fn add_attrlist(mut self, list: AttrList<'a>) -> Self {
         if self.attr.is_none() {
             self.attr.replace(list);
@@ -687,6 +709,7 @@ impl<'a> Edge<'a> {
         }
         self
     }
+    /// Add an attribute to the edge
     pub fn add_attribute(mut self, key: Identity<'a>, value: Identity<'a>) -> Self {
         if self.attr.is_none() {
             self.attr.replace(AttrList(vec![vec![(key, value)]]));
@@ -700,6 +723,7 @@ impl<'a> Edge<'a> {
         }
         self
     }
+    /// Add an attribute to the edge (in pair)
     pub fn add_attrpair(self, pair: AttrPair<'a>) -> Self {
         self.add_attribute(pair.0, pair.1)
     }
