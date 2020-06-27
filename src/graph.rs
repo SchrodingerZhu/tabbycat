@@ -39,9 +39,13 @@ pub enum Identity<'a> {
     U128(u128),
     Float(f32),
     Double(f64),
+    Quoted(&'a str),
     #[cfg(feature="attributes")]
     ArrowName([Option<&'a str>; 4]),
-    Quoted(&'a str),
+    #[cfg(feature="attributes")]
+    RGBA(u8, u8, u8, u8),
+    #[cfg(feature="attributes")]
+    HSV(f32, f32, f32),
 }
 
 #[derive(Builder, Clone, Debug)]
@@ -315,6 +319,8 @@ impl<'a> std::fmt::Display for Identity<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Identity::*;
         match self {
+            RGBA(r, g, b, a) => write!(f, "#{:x}{:x}{:x}{:x}", r, g, b, a),
+            HSV(h, s, v) => write!(f, "{},+{},+{}", h, s, v),
             String(id) => write!(f, "{}", id),
             Usize(id) => write!(f, "{}", id),
             Float(id) => write!(f, "{}", id),
@@ -660,6 +666,7 @@ pub mod attributes {
     #![allow(non_snake_case)]
 
     use crate::{AttrPair, Identity};
+    use std::hint::unreachable_unchecked;
 
     macro_rules! attribute_from {
         ($id:ident, $t:ty) => {
@@ -970,6 +977,9 @@ pub mod attributes {
     }
 
     pub enum Color {
+        Rgb(u8, u8, u8),
+        Rgba(u8, u8, u8, u8),
+        HSV(f32, f32, f32),
         Aliceblue,
         Antiquewhite,
         Antiquewhite1,
@@ -1769,6 +1779,15 @@ pub mod attributes {
 
     impl<'a> From<Color> for Identity<'a> {
         fn from(xc: Color) -> Self {
+            if let Color::Rgb(r, g, b) = xc {
+                return Identity::RGBA(r, g, b, 255);
+            }
+            if let Color::Rgba(r, g, b, a) = xc {
+                return Identity::RGBA(r, g, b, a);
+            }
+            if let Color::HSV(h, s, v) = xc {
+                return Identity::HSV(h, s, v);
+            }
             Identity::String(match xc {
                 Color::Aliceblue => "aliceblue",
                 Color::Antiquewhite => "antiquewhite",
@@ -2437,7 +2456,8 @@ pub mod attributes {
                 Color::Yellow2 => "yellow2",
                 Color::Yellow3 => "yellow3",
                 Color::Yellow4 => "yellow4",
-                Color::Yellowgreen => "yellowgreen"
+                Color::Yellowgreen => "yellowgreen",
+                _ => unsafe {unreachable_unchecked()}
             })
         }
     }
