@@ -338,28 +338,41 @@ impl<'a> std::fmt::Display for Graph<'a> {
             }
         ).and(
             match &self.id {
-                Some(id) => write!(f, "{}", id),
+                Some(id) => if f.alternate() { write!(f, "{} ", id) } else { write!(f, "{}", id) },
                 _ => Ok(())
             }
         ).and(
-            write!(f, "{{{}}}", self.stmts)
+            if f.alternate() {
+                let padding = f.width().unwrap_or(0) + 4;
+                let buffer = format!("{:width$}", self.stmts, width = padding);
+                write!(f, "{{\n").and(
+                    buffer.trim().split("\n").fold(Ok(()), |x, y| {
+                        x.and(
+                            write!(f, "{}", " ".repeat(padding))
+                        ).and(
+                            write!(f, "{}\n", y)
+                        )
+                    }).and(write!(f, "}}"))
+                )
+            } else {
+                write!(f, "{{{}}}", self.stmts)
+            }
         )
     }
 }
 
 impl std::fmt::Display for Compass {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        use Compass::*;
         match self {
-            North => write!(f, "n"),
-            NorthEast => write!(f, "ne"),
-            Ease => write!(f, "e"),
-            SouthEast => write!(f, "se"),
-            South => write!(f, "s"),
-            SouthWest => write!(f, "sw"),
-            West => write!(f, "w"),
-            NorthWest => write!(f, "nw"),
-            Central => write!(f, "c")
+            Compass::North => write!(f, "n"),
+            Compass::NorthEast => write!(f, "ne"),
+            Compass::Ease => write!(f, "e"),
+            Compass::SouthEast => write!(f, "se"),
+            Compass::South => write!(f, "s"),
+            Compass::SouthWest => write!(f, "sw"),
+            Compass::West => write!(f, "w"),
+            Compass::NorthWest => write!(f, "nw"),
+            Compass::Central => write!(f, "c")
         }
     }
 }
@@ -442,7 +455,11 @@ impl<'a> std::fmt::Display for AttrList<'a> {
                     .and(list
                         .iter()
                         .fold(Ok(()), |acc, (x, y)| {
-                            acc.and(write!(f, "{}={};", x, y))
+                            if f.width().is_some() {
+                                acc.and(write!(f, "{}={}; ", x, y))
+                            } else {
+                                acc.and(write!(f, "{}={};", x, y))
+                            }
                         }))
                     .and(write!(f, "]"))
             })
@@ -456,7 +473,11 @@ impl<'a> std::fmt::Display for Stmt<'a> {
             S::Equation(a, b) =>
                 write!(f, "{}={}", a, b),
             S::Edge(edge) =>
-                write!(f, "{}", edge),
+                if let Some(w) = f.width() {
+                    write!(f, "{:width$}", edge, width=w)
+                } else {
+                    write!(f, "{}", edge)
+                }
             S::Node { id, port, attr } => {
                 write!(f, "{}", id)
                     .and(match port {
@@ -465,18 +486,34 @@ impl<'a> std::fmt::Display for Stmt<'a> {
                     })
                     .and(match attr {
                         None => Ok(()),
-                        Some(a) => write!(f, "{}", a)
+                        Some(a) => if let Some(w) = f.width() {
+                            write!(f, " {:width$}", a, width = w)
+                        } else {
+                            write!(f, "{}", a)
+                        }
                     })
             }
             S::Attr(t, list) => {
-                match t {
-                    AttrType::Node => write!(f, "node {}", list),
-                    AttrType::Graph => write!(f, "graph {}", list),
-                    AttrType::Edge => write!(f, "edge {}", list)
+                if let Some(w) = f.width() {
+                    match t {
+                        AttrType::Node => write!(f, "node {:width$}", list, width = w),
+                        AttrType::Graph => write!(f, "graph {:width$}", list, width = w),
+                        AttrType::Edge => write!(f, "edge {:width$}", list, width = w)
+                    }
+                } else {
+                    match t {
+                        AttrType::Node => write!(f, "node {}", list),
+                        AttrType::Graph => write!(f, "graph {}", list),
+                        AttrType::Edge => write!(f, "edge {}", list)
+                    }
                 }
             }
             S::SubGraph(sub) => {
-                write!(f, "{}", sub)
+                if let Some(w) = f.width() {
+                    write!(f, "{:width$}", sub, width = w)
+                } else {
+                    write!(f, "{}", sub)
+                }
             }
         }
     }
@@ -484,11 +521,19 @@ impl<'a> std::fmt::Display for Stmt<'a> {
 
 impl<'a> std::fmt::Display for StmtList<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        self.0
-            .iter()
-            .fold(Ok(()), |acc, x| {
-                acc.and(write!(f, "{};", x))
-            })
+        if let Some(w) = f.width() {
+            self.0
+                .iter()
+                .fold(Ok(()), |acc, x| {
+                    acc.and(write!(f, "{:width$};\n", x, width = w))
+                })
+        } else {
+            self.0
+                .iter()
+                .fold(Ok(()), |acc, x| {
+                    acc.and(write!(f, "{};", x))
+                })
+        }
     }
 }
 
@@ -505,11 +550,37 @@ impl<'a> std::fmt::Display for SubGraph<'a> {
                             _ => Ok(())
                         }
                     ).and(
-                    write!(f, "{{{}}}", stmts)
+                    if let Some(w) = f.width() {
+                        let buffer = format!("{:width$}", stmts, width = w);
+                        write!(f, "{{\n").and(
+                            buffer.trim().split("\n").fold(Ok(()), |x, y| {
+                                x.and(
+                                    write!(f, "{}", " ".repeat(w))
+                                ).and(
+                                    write!(f, "{}\n", y)
+                                )
+                            }).and(write!(f, "}}"))
+                        )
+                    } else {
+                        write!(f, "{{{}}}", stmts)
+                    }
                 )
             }
             SubGraph::Cluster(stmts) => {
-                write!(f, "{{{}}}", stmts)
+                if let Some(w) = f.width() {
+                    let buffer = format!("{:width$}", stmts, width = w);
+                    write!(f, "{{\n").and(
+                        buffer.trim().split("\n").fold(Ok(()), |x, y| {
+                            x.and(
+                                write!(f, "{}", " ".repeat(w))
+                            ).and(
+                                write!(f, "{}\n", y)
+                            )
+                        }).and(write!(f, "}}"))
+                    )
+                } else {
+                    write!(f, "{{{}}}", stmts)
+                }
             }
         }
     }
@@ -525,7 +596,11 @@ impl<'a> std::fmt::Display for EdgeNode<'a> {
                         _ => Ok(())
                     }),
             EdgeNode::SubGraph(graph) => {
-                write!(f, "{}", graph)
+                if let Some(w) = f.width() {
+                    write!(f, "{:width$}", graph, width = w)
+                } else {
+                    write!(f, "{}", graph)
+                }
             }
         }
     }
@@ -537,19 +612,35 @@ impl<'a> std::fmt::Display for EdgeBody<'a> {
             EdgeOp::Arrow => write!(f, "->"),
             EdgeOp::Line => write!(f, "--")
         }.and(
-            write!(f, "{}", self.node)
+            if let Some(w) = f.width() {
+                write!(f, "{:width$}", self.node, width = w)
+            } else {
+                write!(f, "{}", self.node)
+            }
         )
     }
 }
 
 impl<'a> std::fmt::Display for Edge<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", self.node)
+        if let Some(w) = f.width() {
+            write!(f, "{:width$}", self.node, width = w)
+        } else {
+            write!(f, "{}", self.node)
+        }
             .and(self.body.iter().fold(Ok(()), |acc, x| {
-                acc.and(write!(f, "{}", x))
+                acc.and(if let Some(w) = f.width() {
+                    write!(f, "{:width$}", x, width = w)
+                } else {
+                    write!(f, "{}", x)
+                })
             }))
             .and(match &self.attr {
-                Some(x) => write!(f, "{}", x),
+                Some(x) => if let Some(w) = f.width() {
+                    write!(f, " {:width$}", x, width = w)
+                } else {
+                    write!(f, "{}", x)
+                },
                 _ => Ok(())
             })
     }

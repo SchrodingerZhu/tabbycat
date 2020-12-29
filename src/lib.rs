@@ -173,7 +173,16 @@ mod test {
                             .arrow_to_node(Identity::from(4), None)
                             .arrow_to_node(Identity::from(5), None)
                             .arrow_to_node(Identity::from(6), None)
-                            .add_attribute(Identity::id("color")?, Identity::id("purple")?)),
+                            .add_attribute(Identity::id("color")?, Identity::id("purple")?))
+                        .add_subgraph(SubGraph::subgraph(
+                        Some(Identity::from(2)),
+                        StmtList::new()
+                            .add_edge(Edge::head_node(Identity::from(3), None)
+                                .arrow_to_node(Identity::from(4), None)
+                                .arrow_to_node(Identity::from(5), None)
+                                .arrow_to_node(Identity::from(6), None)
+                                .add_attribute(Identity::id("color")?, Identity::id("purple")?)),
+                    ))
                 ))
                 .add_node(Identity::from(7), None, None)
                 .add_edge(Edge::head_node(Identity::from(3), None)
@@ -181,7 +190,7 @@ mod test {
                     .arrow_to_node(Identity::from(1), None)))
             .build()
             .unwrap();
-        println!("{}", g);
+        println!("{:#}", g);
         Ok(())
     }
 }
