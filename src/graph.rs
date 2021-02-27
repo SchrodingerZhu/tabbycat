@@ -172,7 +172,7 @@ pub enum Port<'a> {
 pub enum Compass {
     North,
     NorthEast,
-    Ease,
+    East,
     SouthEast,
     South,
     SouthWest,
@@ -366,7 +366,7 @@ impl std::fmt::Display for Compass {
         match self {
             Compass::North => write!(f, "n"),
             Compass::NorthEast => write!(f, "ne"),
-            Compass::Ease => write!(f, "e"),
+            Compass::East => write!(f, "e"),
             Compass::SouthEast => write!(f, "se"),
             Compass::South => write!(f, "s"),
             Compass::SouthWest => write!(f, "sw"),
