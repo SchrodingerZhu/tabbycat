@@ -1,10 +1,12 @@
-use std::fmt::{Formatter, Result};
+use std::{
+    fmt::{Formatter, Result},
+};
 
 use derive_builder::Builder;
 
 /// The list of attributes
 #[derive(Clone, Debug)]
-pub struct AttrList<'a> (pub(crate) Vec<Vec<(Identity<'a>, Identity<'a>)>>);
+pub struct AttrList<'a>(pub(crate) Vec<Vec<(Identity<'a>, Identity<'a>)>>);
 
 /// The list of statements, including:
 /// - node declaration
@@ -156,8 +158,11 @@ impl<'a> SubGraph<'a> {
     /// }
     /// ```
     pub fn subgraph(id: Option<Identity<'a>>, list: StmtList<'a>) -> Self {
-        SubGraph::SubGraph { id, stmts: Box::new(list) }
+        SubGraph::SubGraph {
+            id,
+            stmts: Box::new(list),
     }
+}
 }
 
 /// The port suffix.
@@ -271,7 +276,6 @@ impl<'a> From<i128> for Identity<'a> {
     }
 }
 
-
 impl<'a> From<u128> for Identity<'a> {
     fn from(number: u128) -> Self {
         Identity::U128(number)
@@ -329,37 +333,39 @@ impl<'a> std::fmt::Display for Graph<'a> {
             write!(f, "strict ")
         } else {
             Ok(())
-        }.and(
-            match self.graph_type {
-                GraphType::Graph =>
-                    write!(f, "graph "),
-                GraphType::DiGraph =>
-                    write!(f, "digraph ")
             }
-        ).and(
-            match &self.id {
-                Some(id) => if f.alternate() { write!(f, "{} ", id) } else { write!(f, "{}", id) },
-                _ => Ok(())
-            }
-        ).and(
+        .and(match self.graph_type {
+            GraphType::Graph => write!(f, "graph "),
+            GraphType::DiGraph => write!(f, "digraph "),
+        })
+        .and(match &self.id {
+            Some(id) => {
             if f.alternate() {
+                    write!(f, "{} ", id)
+                } else {
+                    write!(f, "{}", id)
+                }
+            }
+            _ => Ok(()),
+        })
+        .and(if f.alternate() {
                 let padding = f.width().unwrap_or(0) + 4;
                 let buffer = format!("{:width$}", self.stmts, width = padding);
                 write!(f, "{{\n").and(
-                    buffer.trim().split("\n").fold(Ok(()), |x, y| {
-                        x.and(
-                            write!(f, "{}", " ".repeat(padding))
-                        ).and(
-                            write!(f, "{}\n", y)
+                buffer
+                    .trim()
+                    .split("\n")
+                    .fold(Ok(()), |x, y| {
+                        x.and(write!(f, "{}", " ".repeat(padding)))
+                            .and(write!(f, "{}\n", y))
+                    })
+                    .and(write!(f, "}}")),
                         )
-                    }).and(write!(f, "}}"))
-                )
             } else {
                 write!(f, "{{{}}}", self.stmts)
+        })
             }
-        )
     }
-}
 
 impl std::fmt::Display for Compass {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -372,7 +378,7 @@ impl std::fmt::Display for Compass {
             Compass::SouthWest => write!(f, "sw"),
             Compass::West => write!(f, "w"),
             Compass::NorthWest => write!(f, "nw"),
-            Compass::Central => write!(f, "c")
+            Compass::Central => write!(f, "c"),
         }
     }
 }
@@ -386,21 +392,13 @@ impl<'a> std::fmt::Display for Identity<'a> {
             #[cfg(feature = "attributes")]
             HSV(h, s, v) => write!(f, "\"{},+{},+{}\"", h, s, v),
             #[cfg(feature = "attributes")]
-            Point2D(x, y, fixed) =>
-                write!(f, "\"{},{}\"", x, y)
-                    .and(
-                        if *fixed {
-                            write!(f, "!")
-                        } else { Ok(()) }
-                    ),
+            Point2D(x, y, fixed) => {
+                write!(f, "\"{},{}\"", x, y).and(if *fixed { write!(f, "!") } else { Ok(()) })
+            }
             #[cfg(feature = "attributes")]
-            Point3D(x, y, z, fixed) =>
-                write!(f, "\"{},{},{}\"", x, y, z)
-                    .and(
-                        if *fixed {
-                            write!(f, "!")
-                        } else { Ok(()) }
-                    ),
+            Point3D(x, y, z, fixed) => {
+                write!(f, "\"{},{},{}\"", x, y, z).and(if *fixed { write!(f, "!") } else { Ok(()) })
+            }
             String(id) => write!(f, "{}", id),
             Usize(id) => write!(f, "{}", id),
             Float(id) => write!(f, "{}", id),
@@ -419,42 +417,33 @@ impl<'a> std::fmt::Display for Identity<'a> {
             U128(id) => write!(f, "{}", id),
             Bool(flag) => write!(f, "{}", flag),
             #[cfg(feature = "attributes")]
-            ArrowName(names) => {
-                names.iter().fold(Ok(()), |acc, x| {
-                    acc.and(
-                        match x {
+            ArrowName(names) => names.iter().fold(Ok(()), |acc, x| {
+                acc.and(match x {
                             None => Ok(()),
                             Some(e) => {
                                 write!(f, "{}", e)
                             }
                         })
-                })
+            }),
             }
         }
     }
-}
 
 impl<'a> std::fmt::Display for Port<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Port::ID(id, Some(c)) =>
-                write!(f, ":{}:{}", id, c),
-            Port::ID(x, None) =>
-                write!(f, ":{}", x),
-            Port::Compass(x) =>
-                write!(f, ":{}", x)
+            Port::ID(id, Some(c)) => write!(f, ":{}:{}", id, c),
+            Port::ID(x, None) => write!(f, ":{}", x),
+            Port::Compass(x) => write!(f, ":{}", x),
         }
     }
 }
 
 impl<'a> std::fmt::Display for AttrList<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        self.0.iter()
-            .fold(Ok(()), |acc, list| {
+        self.0.iter().fold(Ok(()), |acc, list| {
                 acc.and(write!(f, "["))
-                    .and(list
-                        .iter()
-                        .fold(Ok(()), |acc, (x, y)| {
+                .and(list.iter().fold(Ok(()), |acc, (x, y)| {
                             if f.width().is_some() {
                                 acc.and(write!(f, "{}={}; ", x, y))
                             } else {
@@ -470,41 +459,41 @@ impl<'a> std::fmt::Display for Stmt<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Stmt as S;
         match self {
-            S::Equation(a, b) =>
-                write!(f, "{}={}", a, b),
-            S::Edge(edge) =>
+            S::Equation(a, b) => write!(f, "{}={}", a, b),
+            S::Edge(edge) => {
                 if let Some(w) = f.width() {
-                    write!(f, "{:width$}", edge, width=w)
+                    write!(f, "{:width$}", edge, width = w)
                 } else {
                     write!(f, "{}", edge)
                 }
-            S::Node { id, port, attr } => {
-                write!(f, "{}", id)
+            }
+            S::Node { id, port, attr } => write!(f, "{}", id)
                     .and(match port {
                         None => Ok(()),
-                        Some(p) => write!(f, "{}", p)
+                    Some(p) => write!(f, "{}", p),
                     })
                     .and(match attr {
                         None => Ok(()),
-                        Some(a) => if let Some(w) = f.width() {
+                    Some(a) => {
+                        if let Some(w) = f.width() {
                             write!(f, " {:width$}", a, width = w)
                         } else {
                             write!(f, "{}", a)
                         }
-                    })
             }
+                }),
             S::Attr(t, list) => {
                 if let Some(w) = f.width() {
                     match t {
                         AttrType::Node => write!(f, "node {:width$}", list, width = w),
                         AttrType::Graph => write!(f, "graph {:width$}", list, width = w),
-                        AttrType::Edge => write!(f, "edge {:width$}", list, width = w)
+                        AttrType::Edge => write!(f, "edge {:width$}", list, width = w),
                     }
                 } else {
                     match t {
                         AttrType::Node => write!(f, "node {}", list),
                         AttrType::Graph => write!(f, "graph {}", list),
-                        AttrType::Edge => write!(f, "edge {}", list)
+                        AttrType::Edge => write!(f, "edge {}", list),
                     }
                 }
             }
@@ -522,17 +511,13 @@ impl<'a> std::fmt::Display for Stmt<'a> {
 impl<'a> std::fmt::Display for StmtList<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if let Some(w) = f.width() {
-            self.0
-                .iter()
-                .fold(Ok(()), |acc, x| {
+            self.0.iter().fold(Ok(()), |acc, x| {
                     acc.and(write!(f, "{:width$};\n", x, width = w))
                 })
         } else {
             self.0
                 .iter()
-                .fold(Ok(()), |acc, x| {
-                    acc.and(write!(f, "{};", x))
-                })
+                .fold(Ok(()), |acc, x| acc.and(write!(f, "{};", x)))
         }
     }
 }
@@ -540,43 +525,40 @@ impl<'a> std::fmt::Display for StmtList<'a> {
 impl<'a> std::fmt::Display for SubGraph<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            SubGraph::SubGraph { id, stmts } => {
-                write!(f, "subgraph ")
-                    .and(
-                        match id {
+            SubGraph::SubGraph { id, stmts } => write!(f, "subgraph ")
+                .and(match id {
                             Some(id) => {
                                 write!(f, "{} ", id)
                             }
-                            _ => Ok(())
-                        }
-                    ).and(
-                    if let Some(w) = f.width() {
+                    _ => Ok(()),
+                })
+                .and(if let Some(w) = f.width() {
                         let buffer = format!("{:width$}", stmts, width = w);
                         write!(f, "{{\n").and(
-                            buffer.trim().split("\n").fold(Ok(()), |x, y| {
-                                x.and(
-                                    write!(f, "{}", " ".repeat(w))
-                                ).and(
-                                    write!(f, "{}\n", y)
-                                )
-                            }).and(write!(f, "}}"))
+                        buffer
+                            .trim()
+                            .split("\n")
+                            .fold(Ok(()), |x, y| {
+                                x.and(write!(f, "{}", " ".repeat(w)))
+                                    .and(write!(f, "{}\n", y))
+                            })
+                            .and(write!(f, "}}")),
                         )
                     } else {
                         write!(f, "{{{}}}", stmts)
-                    }
-                )
-            }
+                }),
             SubGraph::Cluster(stmts) => {
                 if let Some(w) = f.width() {
                     let buffer = format!("{:width$}", stmts, width = w);
                     write!(f, "{{\n").and(
-                        buffer.trim().split("\n").fold(Ok(()), |x, y| {
-                            x.and(
-                                write!(f, "{}", " ".repeat(w))
-                            ).and(
-                                write!(f, "{}\n", y)
-                            )
-                        }).and(write!(f, "}}"))
+                        buffer
+                            .trim()
+                            .split("\n")
+                            .fold(Ok(()), |x, y| {
+                                x.and(write!(f, "{}", " ".repeat(w)))
+                                    .and(write!(f, "{}\n", y))
+                            })
+                            .and(write!(f, "}}")),
                     )
                 } else {
                     write!(f, "{{{}}}", stmts)
@@ -589,11 +571,9 @@ impl<'a> std::fmt::Display for SubGraph<'a> {
 impl<'a> std::fmt::Display for EdgeNode<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            EdgeNode::Node { id, port } =>
-                write!(f, "{}", id)
-                    .and(match port {
+            EdgeNode::Node { id, port } => write!(f, "{}", id).and(match port {
                         Some(port) => write!(f, "{}", port),
-                        _ => Ok(())
+                _ => Ok(()),
                     }),
             EdgeNode::SubGraph(graph) => {
                 if let Some(w) = f.width() {
@@ -610,14 +590,13 @@ impl<'a> std::fmt::Display for EdgeBody<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self.op {
             EdgeOp::Arrow => write!(f, "->"),
-            EdgeOp::Line => write!(f, "--")
-        }.and(
-            if let Some(w) = f.width() {
+            EdgeOp::Line => write!(f, "--"),
+        }
+        .and(if let Some(w) = f.width() {
                 write!(f, "{:width$}", self.node, width = w)
             } else {
                 write!(f, "{}", self.node)
-            }
-        )
+        })
     }
 }
 
@@ -636,12 +615,14 @@ impl<'a> std::fmt::Display for Edge<'a> {
                 })
             }))
             .and(match &self.attr {
-                Some(x) => if let Some(w) = f.width() {
+            Some(x) => {
+                if let Some(w) = f.width() {
                     write!(f, " {:width$}", x, width = w)
                 } else {
                     write!(f, "{}", x)
-                },
-                _ => Ok(())
+                }
+            }
+            _ => Ok(()),
             })
     }
 }
@@ -661,7 +642,7 @@ impl<'a> AttrList<'a> {
         self
     }
     /// Append a list of new attributes to the current bracket
-    pub fn extend<I: IntoIterator<Item=AttrPair<'a>>>(mut self, iter: I) -> Self {
+    pub fn extend<I: IntoIterator<Item = AttrPair<'a>>>(mut self, iter: I) -> Self {
         if self.0.is_empty() {
             self = self.new_bracket();
         }
@@ -669,7 +650,7 @@ impl<'a> AttrList<'a> {
         self
     }
     /// Add a new attribute list
-    pub fn extend_list<I: IntoIterator<Item=Vec<AttrPair<'a>>>>(mut self, iter: I) -> Self {
+    pub fn extend_list<I: IntoIterator<Item = Vec<AttrPair<'a>>>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
@@ -698,46 +679,38 @@ impl<'a> StmtList<'a> {
         self
     }
     /// Append a list a statements
-    pub fn extend<I: IntoIterator<Item=Stmt<'a>>>(mut self, iter: I) -> Self {
+    pub fn extend<I: IntoIterator<Item = Stmt<'a>>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
     /// Add a node statement
-    pub fn add_node(mut self, id: Identity<'a>, port: Option<Port<'a>>, attr: Option<AttrList<'a>>) -> Self {
-        self.0.push(Stmt::Node {
-            id,
-            port,
-            attr,
-        });
+    pub fn add_node(
+        mut self,
+        id: Identity<'a>,
+        port: Option<Port<'a>>,
+        attr: Option<AttrList<'a>>,
+    ) -> Self {
+        self.0.push(Stmt::Node { id, port, attr });
         self
     }
     /// Add a global attribute
     pub fn add_attr(mut self, attr_type: AttrType, attr_list: AttrList<'a>) -> Self {
-        self.0.push(Stmt::Attr(
-            attr_type,
-            attr_list,
-        ));
+        self.0.push(Stmt::Attr(attr_type, attr_list));
         self
     }
     /// Add an edge statement
     pub fn add_edge(mut self, edge: Edge<'a>) -> Self {
-        self.0.push(Stmt::Edge(
-            edge
-        ));
+        self.0.push(Stmt::Edge(edge));
         self
     }
     /// Add a subgraph statement
     pub fn add_subgraph(mut self, sub: SubGraph<'a>) -> Self {
-        self.0.push(Stmt::SubGraph(
-            sub
-        ));
+        self.0.push(Stmt::SubGraph(sub));
         self
     }
     /// Add an equation
     pub fn add_equation(mut self, a: Identity<'a>, b: Identity<'a>) -> Self {
-        self.0.push(Stmt::Equation(
-            a, b,
-        ));
+        self.0.push(Stmt::Equation(a, b));
         self
     }
 }
@@ -746,10 +719,7 @@ impl<'a> Edge<'a> {
     /// Start a new edge with a node
     pub fn head_node(id: Identity<'a>, port: Option<Port<'a>>) -> Self {
         Edge {
-            node: EdgeNode::Node {
-                id,
-                port,
-            },
+            node: EdgeNode::Node { id, port },
             body: vec![],
             attr: None,
         }
@@ -765,51 +735,37 @@ impl<'a> Edge<'a> {
     /// Connect to a new node with line
     /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
     pub fn line_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
-        self.body.push(
-            EdgeBody {
-                node: EdgeNode::Node {
-                    id,
-                    port,
-                },
+        self.body.push(EdgeBody {
+            node: EdgeNode::Node { id, port },
                 op: EdgeOp::Line,
-            }
-        );
+        });
         self
     }
     /// Connect to a new subgraph with line
     /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
     pub fn line_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
-        self.body.push(
-            EdgeBody {
+        self.body.push(EdgeBody {
                 node: EdgeNode::SubGraph(sub),
                 op: EdgeOp::Line,
-            }
-        );
+        });
         self
     }
     /// Connect to a new node with arrow
     /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
     pub fn arrow_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
-        self.body.push(
-            EdgeBody {
-                node: EdgeNode::Node {
-                    id,
-                    port,
-                },
+        self.body.push(EdgeBody {
+            node: EdgeNode::Node { id, port },
                 op: EdgeOp::Arrow,
-            }
-        );
+        });
         self
     }
     /// Connect to a new subgraph with arrow
     /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
     pub fn arrow_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
-        self.body.push(
-            EdgeBody {
+        self.body.push(EdgeBody {
                 node: EdgeNode::SubGraph(sub),
                 op: EdgeOp::Arrow,
-            }
-        );
+        });
         self
     }
     /// Add an attribute list to the edge
@@ -843,4 +799,3 @@ impl<'a> Edge<'a> {
 }
 
 pub type AttrPair<'a> = (Identity<'a>, Identity<'a>);
-
