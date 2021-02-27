@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    convert::TryFrom,
     fmt::{Formatter, Result},
 };
 
@@ -292,6 +293,36 @@ impl<'a> From<f32> for Identity<'a> {
 impl<'a> From<f64> for Identity<'a> {
     fn from(number: f64) -> Self {
         Identity::Double(number)
+    }
+}
+
+impl<'a> TryFrom<Cow<'a, str>> for Identity<'a> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Cow<'a, str>) -> anyhow::Result<Self> {
+        static PATTERN: &str = r#"^[a-zA-Z\x{80}-\x{ff}_][a-zA-Z\x{80}-\x{ff}\d_]*$"#;
+        let re = regex::Regex::new(PATTERN).unwrap();
+        if re.is_match(&value) {
+            Ok(Identity::String(value))
+        } else {
+            Err(anyhow::anyhow!("invalid identity format"))
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a str> for Identity<'a> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &'a str) -> anyhow::Result<Self> {
+        TryFrom::<Cow<'a, str>>::try_from(value.into())
+    }
+}
+
+impl<'a> TryFrom<String> for Identity<'a> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> anyhow::Result<Self> {
+        TryFrom::<Cow<'a, str>>::try_from(value.into())
     }
 }
 
