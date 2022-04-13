@@ -7,8 +7,8 @@
 //! The whole crate is implemented following the dot language specification listed at [graphviz's website](https://graphviz.org/doc/info/lang.html).
 //!
 //! # Attributes
-//! There is an optional feature `attributes` which implemented a subset of the [attributes list of the dot language](https://graphviz.org/doc/info/attrs.html).
-//! By enabling this feature, you will be able to write something like:
+//! This crate implements a subset of the [attributes list of the dot language](https://graphviz.org/doc/info/attrs.html).
+//! You can write something like:
 //!
 //! ```
 //! use tabbycat::attributes::*;
@@ -53,12 +53,10 @@ pub use graph::*;
 
 mod graph;
 
-#[cfg(feature = "attributes")]
 pub mod attributes;
 
 #[cfg(test)]
 mod test {
-    #[cfg(feature = "attributes")]
     use crate::attributes::*;
     use crate::Compass::NorthEast;
     use crate::Identity;
@@ -88,7 +86,7 @@ mod test {
         }
 
         {
-            let a = Port::ID(I::String("a"), None);
+            let a = Port::ID(I::String(std::borrow::Cow::Borrowed("a")), None);
             assert_eq!(":a", a.to_string())
         }
 
@@ -107,17 +105,12 @@ mod test {
             .add(I::id("color")?, I::id("red")?)
             .new_bracket()
             .add(I::id("size")?, I::from(12_isize));
-        #[cfg(feature = "attributes")]
             {
                 let attrlist = attrlist.add_pair(fontsize(12.0))
                     .add_pair(label("test"))
                     .add_pair(fillcolor(Color::Blue))
                     .add_pair(arrowhead(ArrowShape::Orinv));
                 Ok(assert_eq!("[name=abc;color=red;][size=12;fontsize=12;label=\"test\";fillcolor=blue;arrowhead=orinv;]", attrlist.to_string()))
-            }
-        #[cfg(not(feature = "attributes"))]
-            {
-                Ok(assert_eq!("[name=abc;color=red;][size=12;]", attrlist.to_string()))
             }
     }
 
@@ -126,12 +119,12 @@ mod test {
     fn codegen_subgraph() {
         use crate::{Stmt, StmtList, SubGraph, Identity, Port, Compass};
         let g = SubGraph::SubGraph {
-            id: Some(Identity::String("G")),
+            id: Some(Identity::String(std::borrow::Cow::Borrowed("G"))),
             stmts: Box::new(StmtList(
                 vec![Stmt::Node {
-                    id: Identity::String("g"),
+                    id: Identity::String(std::borrow::Cow::Borrowed("g")),
                     port: Some(Port::ID(
-                        Identity::String("h"),
+                        Identity::String(std::borrow::Cow::Borrowed("h")),
                         Some(Compass::SouthWest),
                     )),
                     attr: None,
