@@ -122,10 +122,7 @@ pub struct EdgeBody {
 /// A node of the edge
 #[derive(Clone, Debug)]
 pub enum EdgeNode {
-    Node {
-        id: Identity,
-        port: Option<Port>,
-    },
+    Node { id: Identity, port: Option<Port> },
     SubGraph(SubGraph),
 }
 
@@ -712,12 +709,7 @@ impl StmtList {
         self
     }
     /// Add a node statement
-    pub fn add_node(
-        mut self,
-        id: Identity,
-        port: Option<Port>,
-        attr: Option<AttrList>,
-    ) -> Self {
+    pub fn add_node(mut self, id: Identity, port: Option<Port>, attr: Option<AttrList>) -> Self {
         self.0.push(Stmt::Node { id, port, attr });
         self
     }

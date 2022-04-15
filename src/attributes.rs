@@ -195,14 +195,24 @@ attribute_from!(xlp, Point);
 pub fn arrowhead(value: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([Some(arrow_str(value).to_string().to_string()), None, None, None]),
+        Identity::ArrowName([
+            Some(arrow_str(value).to_string().to_string()),
+            None,
+            None,
+            None,
+        ]),
     )
 }
 
 pub fn arrowhead2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([Some(arrow_str(a).to_string()), Some(arrow_str(b).to_string()), None, None]),
+        Identity::ArrowName([
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            None,
+            None,
+        ]),
     )
 }
 
@@ -240,7 +250,12 @@ pub fn arrowtail(value: ArrowShape) -> AttrPair {
 pub fn arrowtail2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
-        Identity::ArrowName([Some(arrow_str(a).to_string()), Some(arrow_str(b).to_string()), None, None]),
+        Identity::ArrowName([
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            None,
+            None,
+        ]),
     )
 }
 
@@ -1408,7 +1423,8 @@ fn arrow_str(ashape: ArrowShape) -> String {
         ArrowShape::Normal => "normal",
         ArrowShape::Tee => "tee",
         ArrowShape::Vee => "vee",
-    }.to_string()
+    }
+    .to_string()
 }
 
 impl From<Color> for Identity {
