@@ -195,24 +195,14 @@ attribute_from!(xlp, Point);
 pub fn arrowhead(value: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([
-            Some(arrow_str(value).to_string().to_string()),
-            None,
-            None,
-            None,
-        ]),
+        Identity::ArrowName([Some(arrow_str(value)), None, None, None]),
     )
 }
 
 pub fn arrowhead2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            None,
-            None,
-        ]),
+        Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), None, None]),
     )
 }
 
@@ -220,9 +210,9 @@ pub fn arrowhead3(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
         Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            Some(arrow_str(c).to_string()),
+            Some(arrow_str(a)),
+            Some(arrow_str(b)),
+            Some(arrow_str(c)),
             None,
         ]),
     )
@@ -232,10 +222,10 @@ pub fn arrowhead4(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) ->
     (
         Identity::String("arrowhead".into()),
         Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            Some(arrow_str(c).to_string()),
-            Some(arrow_str(d).to_string()),
+            Some(arrow_str(a)),
+            Some(arrow_str(b)),
+            Some(arrow_str(c)),
+            Some(arrow_str(d)),
         ]),
     )
 }
@@ -243,19 +233,14 @@ pub fn arrowhead4(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) ->
 pub fn arrowtail(value: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
-        Identity::ArrowName([Some(arrow_str(value).to_string()), None, None, None]),
+        Identity::ArrowName([Some(arrow_str(value)), None, None, None]),
     )
 }
 
 pub fn arrowtail2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
-        Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            None,
-            None,
-        ]),
+        Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), None, None]),
     )
 }
 
@@ -263,9 +248,9 @@ pub fn arrowtail3(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
         Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            Some(arrow_str(c).to_string()),
+            Some(arrow_str(a)),
+            Some(arrow_str(b)),
+            Some(arrow_str(c)),
             None,
         ]),
     )
@@ -275,10 +260,10 @@ pub fn arrowtail4(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) ->
     (
         Identity::String("arrowtail".into()),
         Identity::ArrowName([
-            Some(arrow_str(a).to_string()),
-            Some(arrow_str(b).to_string()),
-            Some(arrow_str(c).to_string()),
-            Some(arrow_str(d).to_string()),
+            Some(arrow_str(a)),
+            Some(arrow_str(b)),
+            Some(arrow_str(c)),
+            Some(arrow_str(d)),
         ]),
     )
 }
