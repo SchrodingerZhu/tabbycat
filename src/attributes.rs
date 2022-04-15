@@ -7,7 +7,7 @@
 //! To add other attributes, you can use an unsafe way to construct an identity pair.
 //! ```
 //! use tabbycat::Identity;
-//! let my_pair = (Identity::String("label".into()), Identity::Quoted("test"));
+//! let my_pair = (Identity::String("label".into()), Identity::Quoted(std::borrow::Cow::Borrowed("test")));
 //! ```
 //! (Most of the time the safe way (`Identity::id`) should be good, but as we didn't provide a type for something like the
 //! [`lblString`](https://graphviz.org/doc/info/attrs.html#k:lblString), you may want to add a unquoted string using the *unsafe* way.)

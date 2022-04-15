@@ -64,15 +64,10 @@ pub enum Identity<'a> {
     Float(f32),
     Double(f64),
     Quoted(Cow<'a, str>),
-    #[cfg(feature = "attributes")]
     ArrowName([Option<&'a str>; 4]),
-    #[cfg(feature = "attributes")]
     RGBA(u8, u8, u8, u8),
-    #[cfg(feature = "attributes")]
     HSV(f32, f32, f32),
-    #[cfg(feature = "attributes")]
     Point2D(f32, f32, bool),
-    #[cfg(feature = "attributes")]
     Point3D(f32, f32, f32, bool),
 }
 
@@ -434,15 +429,11 @@ impl<'a> std::fmt::Display for Identity<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Identity::*;
         match self {
-            #[cfg(feature = "attributes")]
             RGBA(r, g, b, a) => write!(f, "\"#{:x}{:x}{:x}{:x}\"", r, g, b, a),
-            #[cfg(feature = "attributes")]
             HSV(h, s, v) => write!(f, "\"{},+{},+{}\"", h, s, v),
-            #[cfg(feature = "attributes")]
             Point2D(x, y, fixed) => {
                 write!(f, "\"{},{}\"", x, y).and(if *fixed { write!(f, "!") } else { Ok(()) })
             }
-            #[cfg(feature = "attributes")]
             Point3D(x, y, z, fixed) => {
                 write!(f, "\"{},{},{}\"", x, y, z).and(if *fixed { write!(f, "!") } else { Ok(()) })
             }
@@ -463,7 +454,6 @@ impl<'a> std::fmt::Display for Identity<'a> {
             I128(id) => write!(f, "{}", id),
             U128(id) => write!(f, "{}", id),
             Bool(flag) => write!(f, "{}", flag),
-            #[cfg(feature = "attributes")]
             ArrowName(names) => names.iter().fold(Ok(()), |acc, x| {
                 acc.and(match x {
                     None => Ok(()),
