@@ -7,7 +7,7 @@
 //! To add other attributes, you can use an unsafe way to construct an identity pair.
 //! ```
 //! use tabbycat::Identity;
-//! let my_pair = (Identity::String("label".into()), Identity::Quoted(std::borrow::Cow::Borrowed("test")));
+//! let my_pair = (Identity::String("label".into()), Identity::Quoted("test".to_string()));
 //! ```
 //! (Most of the time the safe way (`Identity::id`) should be good, but as we didn't provide a type for something like the
 //! [`lblString`](https://graphviz.org/doc/info/attrs.html#k:lblString), you may want to add a unquoted string using the *unsafe* way.)
@@ -17,7 +17,7 @@ use crate::{AttrPair, Identity};
 
 macro_rules! attribute_from {
     ($id:ident, $t:ty) => {
-        pub fn $id<'a>(value: $t) -> AttrPair<'a> {
+        pub fn $id(value: $t) -> AttrPair {
             (
                 Identity::String(stringify!($id).into()),
                 Identity::from(value),
@@ -28,9 +28,9 @@ macro_rules! attribute_from {
 
 macro_rules! attribute_quoted {
     ($id:ident) => {
-        pub fn $id<'a, S>(value: S) -> AttrPair<'a>
+        pub fn $id<'a, S>(value: S) -> AttrPair
         where
-            S: Into<std::borrow::Cow<'a, str>>,
+            S: Into<String>,
         {
             (
                 Identity::String(stringify!($id).into()),
@@ -192,78 +192,78 @@ attribute_from!(lp, Point);
 attribute_from!(pos, Point);
 attribute_from!(tail_lp, Point);
 attribute_from!(xlp, Point);
-pub fn arrowhead<'a>(value: ArrowShape) -> AttrPair<'a> {
+pub fn arrowhead(value: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([Some(arrow_str(value)), None, None, None]),
+        Identity::ArrowName([Some(arrow_str(value).to_string().to_string()), None, None, None]),
     )
 }
 
-pub fn arrowhead2<'a>(a: ArrowShape, b: ArrowShape) -> AttrPair<'a> {
+pub fn arrowhead2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
-        Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), None, None]),
+        Identity::ArrowName([Some(arrow_str(a).to_string()), Some(arrow_str(b).to_string()), None, None]),
     )
 }
 
-pub fn arrowhead3<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair<'a> {
+pub fn arrowhead3(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
         Identity::ArrowName([
-            Some(arrow_str(a)),
-            Some(arrow_str(b)),
-            Some(arrow_str(c)),
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            Some(arrow_str(c).to_string()),
             None,
         ]),
     )
 }
 
-pub fn arrowhead4<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) -> AttrPair<'a> {
+pub fn arrowhead4(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowhead".into()),
         Identity::ArrowName([
-            Some(arrow_str(a)),
-            Some(arrow_str(b)),
-            Some(arrow_str(c)),
-            Some(arrow_str(d)),
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            Some(arrow_str(c).to_string()),
+            Some(arrow_str(d).to_string()),
         ]),
     )
 }
 
-pub fn arrowtail<'a>(value: ArrowShape) -> AttrPair<'a> {
+pub fn arrowtail(value: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
-        Identity::ArrowName([Some(arrow_str(value)), None, None, None]),
+        Identity::ArrowName([Some(arrow_str(value).to_string()), None, None, None]),
     )
 }
 
-pub fn arrowtail2<'a>(a: ArrowShape, b: ArrowShape) -> AttrPair<'a> {
+pub fn arrowtail2(a: ArrowShape, b: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
-        Identity::ArrowName([Some(arrow_str(a)), Some(arrow_str(b)), None, None]),
+        Identity::ArrowName([Some(arrow_str(a).to_string()), Some(arrow_str(b).to_string()), None, None]),
     )
 }
 
-pub fn arrowtail3<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair<'a> {
+pub fn arrowtail3(a: ArrowShape, b: ArrowShape, c: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
         Identity::ArrowName([
-            Some(arrow_str(a)),
-            Some(arrow_str(b)),
-            Some(arrow_str(c)),
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            Some(arrow_str(c).to_string()),
             None,
         ]),
     )
 }
 
-pub fn arrowtail4<'a>(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) -> AttrPair<'a> {
+pub fn arrowtail4(a: ArrowShape, b: ArrowShape, c: ArrowShape, d: ArrowShape) -> AttrPair {
     (
         Identity::String("arrowtail".into()),
         Identity::ArrowName([
-            Some(arrow_str(a)),
-            Some(arrow_str(b)),
-            Some(arrow_str(c)),
-            Some(arrow_str(d)),
+            Some(arrow_str(a).to_string()),
+            Some(arrow_str(b).to_string()),
+            Some(arrow_str(c).to_string()),
+            Some(arrow_str(d).to_string()),
         ]),
     )
 }
@@ -279,7 +279,7 @@ pub enum SmoothType {
     Triangle,
 }
 
-impl<'a> From<SmoothType> for Identity<'a> {
+impl From<SmoothType> for Identity {
     fn from(dir: SmoothType) -> Self {
         Identity::String(match dir {
             SmoothType::None => "none".into(),
@@ -301,7 +301,7 @@ pub enum RankDir {
     RL,
 }
 
-impl<'a> From<RankDir> for Identity<'a> {
+impl From<RankDir> for Identity {
     fn from(dir: RankDir) -> Self {
         Identity::String(match dir {
             RankDir::TB => "TB".into(),
@@ -322,7 +322,7 @@ pub enum RankType {
     Sink,
 }
 
-impl<'a> From<RankType> for Identity<'a> {
+impl From<RankType> for Identity {
     fn from(dir: RankType) -> Self {
         Identity::String(match dir {
             RankType::Same => "same".into(),
@@ -342,7 +342,7 @@ pub enum QuadType {
     None,
 }
 
-impl<'a> From<QuadType> for Identity<'a> {
+impl From<QuadType> for Identity {
     fn from(dir: QuadType) -> Self {
         Identity::String(match dir {
             QuadType::None => "none".into(),
@@ -358,7 +358,7 @@ pub enum Point {
     Point3D { x: f32, y: f32, z: f32, fixed: bool },
 }
 
-impl<'a> From<Point> for Identity<'a> {
+impl From<Point> for Identity {
     fn from(dir: Point) -> Self {
         match dir {
             Point::Point2D { x, y, fixed } => Identity::Point2D(x, y, fixed),
@@ -379,7 +379,7 @@ pub enum PageDir {
     LT,
 }
 
-impl<'a> From<PageDir> for Identity<'a> {
+impl From<PageDir> for Identity {
     fn from(dir: PageDir) -> Self {
         Identity::String(match dir {
             PageDir::BL => "BL".into(),
@@ -401,7 +401,7 @@ pub enum ClusterMode {
     None,
 }
 
-impl<'a> From<ClusterMode> for Identity<'a> {
+impl From<ClusterMode> for Identity {
     fn from(dir: ClusterMode) -> Self {
         Identity::String(match dir {
             ClusterMode::Local => "local".into(),
@@ -419,7 +419,7 @@ pub enum OutputMode {
     EdgesFirst,
 }
 
-impl<'a> From<OutputMode> for Identity<'a> {
+impl From<OutputMode> for Identity {
     fn from(dir: OutputMode) -> Self {
         Identity::String(match dir {
             OutputMode::BreadthFirst => "breadthfirst".into(),
@@ -438,7 +438,7 @@ pub enum DirType {
     None,
 }
 
-impl<'a> From<DirType> for Identity<'a> {
+impl From<DirType> for Identity {
     fn from(dir: DirType) -> Self {
         Identity::String(match dir {
             DirType::Forward => "forward".into(),
@@ -465,7 +465,7 @@ pub enum Style {
     Wedged,
 }
 
-impl<'a> From<Style> for Identity<'a> {
+impl From<Style> for Identity {
     fn from(dir: Style) -> Self {
         Identity::String(match dir {
             Style::None => "none".into(),
@@ -1285,7 +1285,7 @@ pub enum Color {
     Yellowgreen,
 }
 
-impl<'a> From<Shape> for Identity<'a> {
+impl From<Shape> for Identity {
     fn from(shape: Shape) -> Self {
         Identity::String(match shape {
             Shape::Box => "box".into(),
@@ -1351,7 +1351,7 @@ impl<'a> From<Shape> for Identity<'a> {
     }
 }
 
-fn arrow_str(ashape: ArrowShape) -> &'static str {
+fn arrow_str(ashape: ArrowShape) -> String {
     match ashape {
         ArrowShape::Olbox => "olbox",
         ArrowShape::Olcrow => "olcrow",
@@ -1408,10 +1408,10 @@ fn arrow_str(ashape: ArrowShape) -> &'static str {
         ArrowShape::Normal => "normal",
         ArrowShape::Tee => "tee",
         ArrowShape::Vee => "vee",
-    }
+    }.to_string()
 }
 
-impl<'a> From<Color> for Identity<'a> {
+impl From<Color> for Identity {
     fn from(xc: Color) -> Self {
         if let Color::Rgb(r, g, b) = xc {
             return Identity::RGBA(r, g, b, 255);

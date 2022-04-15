@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     convert::TryFrom,
     fmt::{Formatter, Result},
 };
@@ -8,7 +7,7 @@ use derive_builder::Builder;
 
 /// The list of attributes
 #[derive(Clone, Debug)]
-pub struct AttrList<'a>(pub(crate) Vec<Vec<(Identity<'a>, Identity<'a>)>>);
+pub struct AttrList(pub(crate) Vec<Vec<(Identity, Identity)>>);
 
 /// The list of statements, including:
 /// - node declaration
@@ -16,7 +15,7 @@ pub struct AttrList<'a>(pub(crate) Vec<Vec<(Identity<'a>, Identity<'a>)>>);
 /// - subgraph declaration
 /// - global attributes
 #[derive(Clone, Debug)]
-pub struct StmtList<'a>(pub(crate) Vec<Stmt<'a>>);
+pub struct StmtList(pub(crate) Vec<Stmt>);
 
 /// The types of graphs
 #[derive(Copy, Clone, Debug)]
@@ -46,8 +45,8 @@ pub enum AttrType {
 ///
 /// However, if you need to create some special identities like `HTML`, you can use `Identity::String` directly.
 #[derive(Clone, Debug)]
-pub enum Identity<'a> {
-    String(Cow<'a, str>),
+pub enum Identity {
+    String(String),
     Usize(usize),
     ISize(isize),
     I8(i8),
@@ -63,8 +62,8 @@ pub enum Identity<'a> {
     U128(u128),
     Float(f32),
     Double(f64),
-    Quoted(Cow<'a, str>),
-    ArrowName([Option<&'a str>; 4]),
+    Quoted(String),
+    ArrowName([Option<String>; 4]),
     RGBA(u8, u8, u8, u8),
     HSV(f32, f32, f32),
     Point2D(f32, f32, bool),
@@ -74,36 +73,36 @@ pub enum Identity<'a> {
 /// Graph in the dot language. You can construct it with the `GraphBuilder`.
 #[derive(Builder, Clone, Debug)]
 #[builder(pattern = "owned")]
-pub struct Graph<'a> {
+pub struct Graph {
     graph_type: GraphType,
     strict: bool,
     #[builder(setter(strip_option))]
-    id: Option<Identity<'a>>,
-    stmts: StmtList<'a>,
+    id: Option<Identity>,
+    stmts: StmtList,
 }
 
 /// A single line of statement. You should not construct it directly in most cases.
 /// We still expose this type because we only implement a subset of dot language so
 /// you may need to write special statements on your own.
 #[derive(Clone, Debug)]
-pub enum Stmt<'a> {
-    Edge(Edge<'a>),
+pub enum Stmt {
+    Edge(Edge),
     Node {
-        id: Identity<'a>,
-        port: Option<Port<'a>>,
-        attr: Option<AttrList<'a>>,
+        id: Identity,
+        port: Option<Port>,
+        attr: Option<AttrList>,
     },
-    Attr(AttrType, AttrList<'a>),
-    Equation(Identity<'a>, Identity<'a>),
-    SubGraph(SubGraph<'a>),
+    Attr(AttrType, AttrList),
+    Equation(Identity, Identity),
+    SubGraph(SubGraph),
 }
 
 /// An edge in the dot language.
 #[derive(Clone, Debug)]
-pub struct Edge<'a> {
-    pub(crate) node: EdgeNode<'a>,
-    pub(crate) body: Vec<EdgeBody<'a>>,
-    pub(crate) attr: Option<AttrList<'a>>,
+pub struct Edge {
+    pub(crate) node: EdgeNode,
+    pub(crate) body: Vec<EdgeBody>,
+    pub(crate) attr: Option<AttrList>,
 }
 
 /// The tag of the edge operation
@@ -115,37 +114,37 @@ pub enum EdgeOp {
 
 /// A body part of edge
 #[derive(Clone, Debug)]
-pub struct EdgeBody<'a> {
-    pub(crate) node: EdgeNode<'a>,
+pub struct EdgeBody {
+    pub(crate) node: EdgeNode,
     pub(crate) op: EdgeOp,
 }
 
 /// A node of the edge
 #[derive(Clone, Debug)]
-pub enum EdgeNode<'a> {
+pub enum EdgeNode {
     Node {
-        id: Identity<'a>,
-        port: Option<Port<'a>>,
+        id: Identity,
+        port: Option<Port>,
     },
-    SubGraph(SubGraph<'a>),
+    SubGraph(SubGraph),
 }
 
 /// A subgraph in the dot language
 #[derive(Clone, Debug)]
-pub enum SubGraph<'a> {
+pub enum SubGraph {
     SubGraph {
-        id: Option<Identity<'a>>,
-        stmts: Box<StmtList<'a>>,
+        id: Option<Identity>,
+        stmts: Box<StmtList>,
     },
-    Cluster(Box<StmtList<'a>>),
+    Cluster(Box<StmtList>),
 }
 
-impl<'a> SubGraph<'a> {
+impl SubGraph {
     /// create a cluster, for example you may need to following structure in your graph:
     /// ```plaintext
     /// {A;B;}
     /// ```
-    pub fn cluster(list: StmtList<'a>) -> Self {
+    pub fn cluster(list: StmtList) -> Self {
         SubGraph::Cluster(Box::new(list))
     }
     /// create a subgraph, which will output something like:
@@ -154,7 +153,7 @@ impl<'a> SubGraph<'a> {
     ///     A -> B;
     /// }
     /// ```
-    pub fn subgraph(id: Option<Identity<'a>>, list: StmtList<'a>) -> Self {
+    pub fn subgraph(id: Option<Identity>, list: StmtList) -> Self {
         SubGraph::SubGraph {
             id,
             stmts: Box::new(list),
@@ -164,8 +163,8 @@ impl<'a> SubGraph<'a> {
 
 /// The port suffix.
 #[derive(Clone, Debug)]
-pub enum Port<'a> {
-    ID(Identity<'a>, Option<Compass>),
+pub enum Port {
+    ID(Identity, Option<Compass>),
     Compass(Compass),
 }
 
@@ -183,118 +182,118 @@ pub enum Compass {
     Central,
 }
 
-impl<'a> IntoIterator for StmtList<'a> {
-    type Item = Stmt<'a>;
-    type IntoIter = std::vec::IntoIter<Stmt<'a>>;
+impl IntoIterator for StmtList {
+    type Item = Stmt;
+    type IntoIter = std::vec::IntoIter<Stmt>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl<'a> IntoIterator for AttrList<'a> {
-    type Item = Vec<(Identity<'a>, Identity<'a>)>;
-    type IntoIter = std::vec::IntoIter<Vec<(Identity<'a>, Identity<'a>)>>;
+impl IntoIterator for AttrList {
+    type Item = Vec<(Identity, Identity)>;
+    type IntoIter = std::vec::IntoIter<Vec<(Identity, Identity)>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
 }
 
-impl<'a> From<bool> for Identity<'a> {
+impl From<bool> for Identity {
     fn from(flag: bool) -> Self {
         Identity::Bool(flag)
     }
 }
 
-impl<'a> From<isize> for Identity<'a> {
+impl From<isize> for Identity {
     fn from(number: isize) -> Self {
         Identity::ISize(number)
     }
 }
 
-impl<'a> From<usize> for Identity<'a> {
+impl From<usize> for Identity {
     fn from(number: usize) -> Self {
         Identity::Usize(number)
     }
 }
 
-impl<'a> From<i8> for Identity<'a> {
+impl From<i8> for Identity {
     fn from(number: i8) -> Self {
         Identity::I8(number)
     }
 }
 
-impl<'a> From<u8> for Identity<'a> {
+impl From<u8> for Identity {
     fn from(number: u8) -> Self {
         Identity::U8(number)
     }
 }
 
-impl<'a> From<u16> for Identity<'a> {
+impl From<u16> for Identity {
     fn from(number: u16) -> Self {
         Identity::U16(number)
     }
 }
 
-impl<'a> From<i16> for Identity<'a> {
+impl From<i16> for Identity {
     fn from(number: i16) -> Self {
         Identity::I16(number)
     }
 }
 
-impl<'a> From<u32> for Identity<'a> {
+impl From<u32> for Identity {
     fn from(number: u32) -> Self {
         Identity::U32(number)
     }
 }
 
-impl<'a> From<i32> for Identity<'a> {
+impl From<i32> for Identity {
     fn from(number: i32) -> Self {
         Identity::I32(number)
     }
 }
 
-impl<'a> From<u64> for Identity<'a> {
+impl From<u64> for Identity {
     fn from(number: u64) -> Self {
         Identity::U64(number)
     }
 }
 
-impl<'a> From<i64> for Identity<'a> {
+impl From<i64> for Identity {
     fn from(number: i64) -> Self {
         Identity::I64(number)
     }
 }
 
-impl<'a> From<i128> for Identity<'a> {
+impl From<i128> for Identity {
     fn from(number: i128) -> Self {
         Identity::I128(number)
     }
 }
 
-impl<'a> From<u128> for Identity<'a> {
+impl From<u128> for Identity {
     fn from(number: u128) -> Self {
         Identity::U128(number)
     }
 }
 
-impl<'a> From<f32> for Identity<'a> {
+impl From<f32> for Identity {
     fn from(number: f32) -> Self {
         Identity::Float(number)
     }
 }
 
-impl<'a> From<f64> for Identity<'a> {
+impl From<f64> for Identity {
     fn from(number: f64) -> Self {
         Identity::Double(number)
     }
 }
 
-impl<'a> TryFrom<Cow<'a, str>> for Identity<'a> {
+impl TryFrom<String> for Identity {
     type Error = anyhow::Error;
 
-    fn try_from(value: Cow<'a, str>) -> anyhow::Result<Self> {
+    fn try_from(value: String) -> anyhow::Result<Self> {
         static PATTERN: &str = r#"^[a-zA-Z\x{80}-\x{ff}_][a-zA-Z\x{80}-\x{ff}\d_]*$"#;
         let re = regex::Regex::new(PATTERN).unwrap();
         if re.is_match(&value) {
@@ -305,28 +304,20 @@ impl<'a> TryFrom<Cow<'a, str>> for Identity<'a> {
     }
 }
 
-impl<'a> TryFrom<&'a str> for Identity<'a> {
+impl<'a> TryFrom<&'a str> for Identity {
     type Error = anyhow::Error;
 
     fn try_from(value: &'a str) -> anyhow::Result<Self> {
-        TryFrom::<Cow<'a, str>>::try_from(value.into())
+        TryFrom::<String>::try_from(value.into())
     }
 }
 
-impl<'a> TryFrom<String> for Identity<'a> {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> anyhow::Result<Self> {
-        TryFrom::<Cow<'a, str>>::try_from(value.into())
-    }
-}
-
-impl<'a> Identity<'a> {
+impl Identity {
     /// create a checked id string, the lexical rule is:
     /// `^[a-zA-Z\x{80}-\x{ff}_][a-zA-Z\x{80}-\x{ff}\d_]*$`
     pub fn id<S>(data: S) -> anyhow::Result<Self>
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         let data = data.into();
 
@@ -341,26 +332,26 @@ impl<'a> Identity<'a> {
     /// create a quoted string
     pub fn quoted<S>(data: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         Identity::Quoted(data.into())
     }
 
     pub fn raw<S>(data: S) -> Self
     where
-        S: Into<Cow<'a, str>>,
+        S: Into<String>,
     {
         Identity::String(data.into())
     }
 }
 
-impl<'a> Port<'a> {
+impl Port {
     /// corresponds to `:id`
-    pub fn id(i: Identity<'a>) -> Self {
+    pub fn id(i: Identity) -> Self {
         Port::ID(i, None)
     }
     /// corresponds to `:id:<direction>`
-    pub fn id_compass(i: Identity<'a>, c: Compass) -> Self {
+    pub fn id_compass(i: Identity, c: Compass) -> Self {
         Port::ID(i, Some(c))
     }
     /// corresponds to `:<direction>`
@@ -369,7 +360,7 @@ impl<'a> Port<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Graph<'a> {
+impl std::fmt::Display for Graph {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if self.strict {
             write!(f, "strict ")
@@ -425,7 +416,7 @@ impl std::fmt::Display for Compass {
     }
 }
 
-impl<'a> std::fmt::Display for Identity<'a> {
+impl std::fmt::Display for Identity {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Identity::*;
         match self {
@@ -466,7 +457,7 @@ impl<'a> std::fmt::Display for Identity<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Port<'a> {
+impl std::fmt::Display for Port {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Port::ID(id, Some(c)) => write!(f, ":{}:{}", id, c),
@@ -476,7 +467,7 @@ impl<'a> std::fmt::Display for Port<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for AttrList<'a> {
+impl std::fmt::Display for AttrList {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         self.0.iter().fold(Ok(()), |acc, list| {
             acc.and(write!(f, "["))
@@ -492,7 +483,7 @@ impl<'a> std::fmt::Display for AttrList<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Stmt<'a> {
+impl std::fmt::Display for Stmt {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Stmt as S;
         match self {
@@ -545,7 +536,7 @@ impl<'a> std::fmt::Display for Stmt<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for StmtList<'a> {
+impl std::fmt::Display for StmtList {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if let Some(w) = f.width() {
             self.0.iter().fold(Ok(()), |acc, x| {
@@ -559,7 +550,7 @@ impl<'a> std::fmt::Display for StmtList<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for SubGraph<'a> {
+impl std::fmt::Display for SubGraph {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             SubGraph::SubGraph { id, stmts } => write!(f, "subgraph ")
@@ -605,7 +596,7 @@ impl<'a> std::fmt::Display for SubGraph<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for EdgeNode<'a> {
+impl std::fmt::Display for EdgeNode {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             EdgeNode::Node { id, port } => write!(f, "{}", id).and(match port {
@@ -623,7 +614,7 @@ impl<'a> std::fmt::Display for EdgeNode<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for EdgeBody<'a> {
+impl std::fmt::Display for EdgeBody {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self.op {
             EdgeOp::Arrow => write!(f, "->"),
@@ -637,7 +628,7 @@ impl<'a> std::fmt::Display for EdgeBody<'a> {
     }
 }
 
-impl<'a> std::fmt::Display for Edge<'a> {
+impl std::fmt::Display for Edge {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if let Some(w) = f.width() {
             write!(f, "{:width$}", self.node, width = w)
@@ -664,7 +655,7 @@ impl<'a> std::fmt::Display for Edge<'a> {
     }
 }
 
-impl<'a> AttrList<'a> {
+impl AttrList {
     /// Create an empty attribute list
     pub fn new() -> Self {
         AttrList(Vec::new())
@@ -679,7 +670,7 @@ impl<'a> AttrList<'a> {
         self
     }
     /// Append a list of new attributes to the current bracket
-    pub fn extend<I: IntoIterator<Item = AttrPair<'a>>>(mut self, iter: I) -> Self {
+    pub fn extend<I: IntoIterator<Item = AttrPair>>(mut self, iter: I) -> Self {
         if self.0.is_empty() {
             self = self.new_bracket();
         }
@@ -687,12 +678,12 @@ impl<'a> AttrList<'a> {
         self
     }
     /// Add a new attribute list
-    pub fn extend_list<I: IntoIterator<Item = Vec<AttrPair<'a>>>>(mut self, iter: I) -> Self {
+    pub fn extend_list<I: IntoIterator<Item = Vec<AttrPair>>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
     /// Add a new attribute
-    pub fn add(mut self, key: Identity<'a>, value: Identity<'a>) -> Self {
+    pub fn add(mut self, key: Identity, value: Identity) -> Self {
         if self.0.is_empty() {
             self = self.new_bracket();
         }
@@ -700,61 +691,61 @@ impl<'a> AttrList<'a> {
         self
     }
     /// Add a new attribute (in pair)
-    pub fn add_pair(self, pair: AttrPair<'a>) -> Self {
+    pub fn add_pair(self, pair: AttrPair) -> Self {
         self.add(pair.0, pair.1)
     }
 }
 
-impl<'a> StmtList<'a> {
+impl StmtList {
     /// Create a new statement list
     pub fn new() -> Self {
         StmtList(Vec::new())
     }
     /// Add a statement
-    pub fn add(mut self, stmt: Stmt<'a>) -> Self {
+    pub fn add(mut self, stmt: Stmt) -> Self {
         self.0.push(stmt);
         self
     }
     /// Append a list a statements
-    pub fn extend<I: IntoIterator<Item = Stmt<'a>>>(mut self, iter: I) -> Self {
+    pub fn extend<I: IntoIterator<Item = Stmt>>(mut self, iter: I) -> Self {
         self.0.extend(iter);
         self
     }
     /// Add a node statement
     pub fn add_node(
         mut self,
-        id: Identity<'a>,
-        port: Option<Port<'a>>,
-        attr: Option<AttrList<'a>>,
+        id: Identity,
+        port: Option<Port>,
+        attr: Option<AttrList>,
     ) -> Self {
         self.0.push(Stmt::Node { id, port, attr });
         self
     }
     /// Add a global attribute
-    pub fn add_attr(mut self, attr_type: AttrType, attr_list: AttrList<'a>) -> Self {
+    pub fn add_attr(mut self, attr_type: AttrType, attr_list: AttrList) -> Self {
         self.0.push(Stmt::Attr(attr_type, attr_list));
         self
     }
     /// Add an edge statement
-    pub fn add_edge(mut self, edge: Edge<'a>) -> Self {
+    pub fn add_edge(mut self, edge: Edge) -> Self {
         self.0.push(Stmt::Edge(edge));
         self
     }
     /// Add a subgraph statement
-    pub fn add_subgraph(mut self, sub: SubGraph<'a>) -> Self {
+    pub fn add_subgraph(mut self, sub: SubGraph) -> Self {
         self.0.push(Stmt::SubGraph(sub));
         self
     }
     /// Add an equation
-    pub fn add_equation(mut self, a: Identity<'a>, b: Identity<'a>) -> Self {
+    pub fn add_equation(mut self, a: Identity, b: Identity) -> Self {
         self.0.push(Stmt::Equation(a, b));
         self
     }
 }
 
-impl<'a> Edge<'a> {
+impl Edge {
     /// Start a new edge with a node
-    pub fn head_node(id: Identity<'a>, port: Option<Port<'a>>) -> Self {
+    pub fn head_node(id: Identity, port: Option<Port>) -> Self {
         Edge {
             node: EdgeNode::Node { id, port },
             body: vec![],
@@ -762,7 +753,7 @@ impl<'a> Edge<'a> {
         }
     }
     /// Start a new edge with a subgraph
-    pub fn head_subgraph(sub: SubGraph<'a>) -> Self {
+    pub fn head_subgraph(sub: SubGraph) -> Self {
         Edge {
             node: EdgeNode::SubGraph(sub),
             body: vec![],
@@ -771,7 +762,7 @@ impl<'a> Edge<'a> {
     }
     /// Connect to a new node with line
     /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
-    pub fn line_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
+    pub fn line_to_node(mut self, id: Identity, port: Option<Port>) -> Self {
         self.body.push(EdgeBody {
             node: EdgeNode::Node { id, port },
             op: EdgeOp::Line,
@@ -780,7 +771,7 @@ impl<'a> Edge<'a> {
     }
     /// Connect to a new subgraph with line
     /// Notice that you should not use this in a directed graph. Unfortunately, this crate does not check this for you.
-    pub fn line_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
+    pub fn line_to_subgraph(mut self, sub: SubGraph) -> Self {
         self.body.push(EdgeBody {
             node: EdgeNode::SubGraph(sub),
             op: EdgeOp::Line,
@@ -789,7 +780,7 @@ impl<'a> Edge<'a> {
     }
     /// Connect to a new node with arrow
     /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
-    pub fn arrow_to_node(mut self, id: Identity<'a>, port: Option<Port<'a>>) -> Self {
+    pub fn arrow_to_node(mut self, id: Identity, port: Option<Port>) -> Self {
         self.body.push(EdgeBody {
             node: EdgeNode::Node { id, port },
             op: EdgeOp::Arrow,
@@ -798,7 +789,7 @@ impl<'a> Edge<'a> {
     }
     /// Connect to a new subgraph with arrow
     /// Notice that you should not use this in a undirected graph. Unfortunately, this crate does not check this for you.
-    pub fn arrow_to_subgraph(mut self, sub: SubGraph<'a>) -> Self {
+    pub fn arrow_to_subgraph(mut self, sub: SubGraph) -> Self {
         self.body.push(EdgeBody {
             node: EdgeNode::SubGraph(sub),
             op: EdgeOp::Arrow,
@@ -806,7 +797,7 @@ impl<'a> Edge<'a> {
         self
     }
     /// Add an attribute list to the edge
-    pub fn add_attrlist(mut self, list: AttrList<'a>) -> Self {
+    pub fn add_attrlist(mut self, list: AttrList) -> Self {
         if self.attr.is_none() {
             self.attr.replace(list);
         } else {
@@ -816,7 +807,7 @@ impl<'a> Edge<'a> {
         self
     }
     /// Add an attribute to the edge
-    pub fn add_attribute(mut self, key: Identity<'a>, value: Identity<'a>) -> Self {
+    pub fn add_attribute(mut self, key: Identity, value: Identity) -> Self {
         if self.attr.is_none() {
             self.attr.replace(AttrList(vec![vec![(key, value)]]));
         } else {
@@ -830,9 +821,9 @@ impl<'a> Edge<'a> {
         self
     }
     /// Add an attribute to the edge (in pair)
-    pub fn add_attrpair(self, pair: AttrPair<'a>) -> Self {
+    pub fn add_attrpair(self, pair: AttrPair) -> Self {
         self.add_attribute(pair.0, pair.1)
     }
 }
 
-pub type AttrPair<'a> = (Identity<'a>, Identity<'a>);
+pub type AttrPair = (Identity, Identity);

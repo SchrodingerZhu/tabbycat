@@ -86,7 +86,7 @@ mod test {
         }
 
         {
-            let a = Port::ID(I::String(std::borrow::Cow::Borrowed("a")), None);
+            let a = Port::ID(I::String("a".to_string()), None);
             assert_eq!(":a", a.to_string())
         }
 
@@ -119,12 +119,12 @@ mod test {
     fn codegen_subgraph() {
         use crate::{Stmt, StmtList, SubGraph, Identity, Port, Compass};
         let g = SubGraph::SubGraph {
-            id: Some(Identity::String(std::borrow::Cow::Borrowed("G"))),
+            id: Some(Identity::String("G".to_string())),
             stmts: Box::new(StmtList(
                 vec![Stmt::Node {
-                    id: Identity::String(std::borrow::Cow::Borrowed("g")),
+                    id: Identity::String("g".to_string()),
                     port: Some(Port::ID(
-                        Identity::String(std::borrow::Cow::Borrowed("h")),
+                        Identity::String("h".to_string()),
                         Some(Compass::SouthWest),
                     )),
                     attr: None,
