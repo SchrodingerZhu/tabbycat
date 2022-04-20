@@ -140,10 +140,15 @@ mod test {
             .arrow_to_node(Identity::id("b")?, None)
             .arrow_to_subgraph(SubGraph::cluster(
                 StmtList::new()
+                    .add_attr(
+                        crate::AttrType::Graph,
+                        crate::AttrList::new()
+                            .add(Identity::id("color")?, Identity::RGBA(0, 10, 254, 90)),
+                    )
                     .add_node(Identity::id("c")?, None, None)
                     .add_node(Identity::id("d")?, None, None),
             ));
-        assert_eq!("a->b->{c;d;}[color=pink;]", edge.to_string());
+        assert_eq!("a->b->{graph [color=\"#00a0fe5a\";];c;d;}[color=pink;]", edge.to_string());
         Ok(())
     }
 
