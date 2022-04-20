@@ -175,6 +175,7 @@ attribute_from!(z, f64);
 attribute_from!(bgcolor, Color);
 attribute_from!(color, Color);
 attribute_from!(fillcolor, Color);
+attribute_from!(fontcolor, Color);
 attribute_from!(labelfontcolor, Color);
 attribute_from!(pencolor, Color);
 attribute_from!(shape, Shape);
