@@ -77,16 +77,16 @@ mod test {
 
     #[test]
     fn codegen_port() {
-        use crate::Port;
-        use crate::Identity as I;
         use crate::Compass as C;
+        use crate::Identity as I;
+        use crate::Port;
         {
             let a = Port::id_compass(I::from(1.5), C::NorthEast);
             assert_eq!(":1.5:ne", a.to_string())
         }
 
         {
-            let a = Port::ID(I::String(std::borrow::Cow::Borrowed("a")), None);
+            let a = Port::ID(I::String("a".to_string()), None);
             assert_eq!(":a", a.to_string())
         }
 
@@ -98,53 +98,51 @@ mod test {
 
     #[test]
     fn codegen_attrlist() -> anyhow::Result<()> {
-        use crate::Identity as I;
         use crate::AttrList;
+        use crate::Identity as I;
         let attrlist = AttrList::new()
             .add(I::id("name")?, I::id("abc")?)
             .add(I::id("color")?, I::id("red")?)
             .new_bracket()
             .add(I::id("size")?, I::from(12_isize));
-            {
-                let attrlist = attrlist.add_pair(fontsize(12.0))
-                    .add_pair(label("test"))
-                    .add_pair(fillcolor(Color::Blue))
-                    .add_pair(arrowhead(ArrowShape::Orinv));
-                Ok(assert_eq!("[name=abc;color=red;][size=12;fontsize=12;label=\"test\";fillcolor=blue;arrowhead=orinv;]", attrlist.to_string()))
-            }
+        {
+            let attrlist = attrlist
+                .add_pair(fontsize(12.0))
+                .add_pair(label("test"))
+                .add_pair(fillcolor(Color::Blue))
+                .add_pair(arrowhead(ArrowShape::Orinv));
+            Ok(assert_eq!("[name=abc;color=red;][size=12;fontsize=12;label=\"test\";fillcolor=blue;arrowhead=orinv;]", attrlist.to_string()))
+        }
     }
-
 
     #[test]
     fn codegen_subgraph() {
-        use crate::{Stmt, StmtList, SubGraph, Identity, Port, Compass};
+        use crate::{Compass, Identity, Port, Stmt, StmtList, SubGraph};
         let g = SubGraph::SubGraph {
-            id: Some(Identity::String(std::borrow::Cow::Borrowed("G"))),
-            stmts: Box::new(StmtList(
-                vec![Stmt::Node {
-                    id: Identity::String(std::borrow::Cow::Borrowed("g")),
-                    port: Some(Port::ID(
-                        Identity::String(std::borrow::Cow::Borrowed("h")),
-                        Some(Compass::SouthWest),
-                    )),
-                    attr: None,
-                }]
-            )),
+            id: Some(Identity::String("G".to_string())),
+            stmts: Box::new(StmtList(vec![Stmt::Node {
+                id: Identity::String("g".to_string()),
+                port: Some(Port::ID(
+                    Identity::String("h".to_string()),
+                    Some(Compass::SouthWest),
+                )),
+                attr: None,
+            }])),
         };
         assert_eq!("subgraph G {g:h:sw;}", g.to_string())
     }
 
     #[test]
     fn codegen_edge() -> anyhow::Result<()> {
-        use crate::{SubGraph, StmtList, Edge};
+        use crate::{Edge, StmtList, SubGraph};
         let edge = Edge::head_node(Identity::id("a")?, None)
             .add_attribute(Identity::id("color")?, Identity::id("pink")?)
             .arrow_to_node(Identity::id("b")?, None)
-            .arrow_to_subgraph(
-                SubGraph::cluster(StmtList::new()
+            .arrow_to_subgraph(SubGraph::cluster(
+                StmtList::new()
                     .add_node(Identity::id("c")?, None, None)
-                    .add_node(Identity::id("d")?, None, None)
-                ));
+                    .add_node(Identity::id("d")?, None, None),
+            ));
         assert_eq!("a->b->{c;d;}[color=pink;]", edge.to_string());
         Ok(())
     }
@@ -156,31 +154,44 @@ mod test {
             .graph_type(GraphType::DiGraph)
             .strict(true)
             .id(Identity::Double(1.1))
-            .stmts(StmtList::new()
-                .add_node(Identity::from(1), Some(Port::Compass(NorthEast)), Some(AttrList::new()
-                    .add(Identity::id("color")?, Identity::id("red")?)))
-                .add_subgraph(SubGraph::subgraph(
-                    Some(Identity::from(2)),
-                    StmtList::new()
-                        .add_edge(Edge::head_node(Identity::from(3), None)
-                            .arrow_to_node(Identity::from(4), None)
-                            .arrow_to_node(Identity::from(5), None)
-                            .arrow_to_node(Identity::from(6), None)
-                            .add_attribute(Identity::id("color")?, Identity::id("purple")?))
-                        .add_subgraph(SubGraph::subgraph(
+            .stmts(
+                StmtList::new()
+                    .add_node(
+                        Identity::from(1),
+                        Some(Port::Compass(NorthEast)),
+                        Some(AttrList::new().add(Identity::id("color")?, Identity::id("red")?)),
+                    )
+                    .add_subgraph(SubGraph::subgraph(
                         Some(Identity::from(2)),
                         StmtList::new()
-                            .add_edge(Edge::head_node(Identity::from(3), None)
-                                .arrow_to_node(Identity::from(4), None)
-                                .arrow_to_node(Identity::from(5), None)
-                                .arrow_to_node(Identity::from(6), None)
-                                .add_attribute(Identity::id("color")?, Identity::id("purple")?)),
+                            .add_edge(
+                                Edge::head_node(Identity::from(3), None)
+                                    .arrow_to_node(Identity::from(4), None)
+                                    .arrow_to_node(Identity::from(5), None)
+                                    .arrow_to_node(Identity::from(6), None)
+                                    .add_attribute(Identity::id("color")?, Identity::id("purple")?),
+                            )
+                            .add_subgraph(SubGraph::subgraph(
+                                Some(Identity::from(2)),
+                                StmtList::new().add_edge(
+                                    Edge::head_node(Identity::from(3), None)
+                                        .arrow_to_node(Identity::from(4), None)
+                                        .arrow_to_node(Identity::from(5), None)
+                                        .arrow_to_node(Identity::from(6), None)
+                                        .add_attribute(
+                                            Identity::id("color")?,
+                                            Identity::id("purple")?,
+                                        ),
+                                ),
+                            )),
                     ))
-                ))
-                .add_node(Identity::from(7), None, None)
-                .add_edge(Edge::head_node(Identity::from(3), None)
-                    .arrow_to_node(Identity::from(7), None)
-                    .arrow_to_node(Identity::from(1), None)))
+                    .add_node(Identity::from(7), None, None)
+                    .add_edge(
+                        Edge::head_node(Identity::from(3), None)
+                            .arrow_to_node(Identity::from(7), None)
+                            .arrow_to_node(Identity::from(1), None),
+                    ),
+            )
             .build()
             .unwrap();
         println!("{:#}", g);
