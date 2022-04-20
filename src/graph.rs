@@ -341,6 +341,13 @@ impl Identity {
     {
         Identity::String(data.into())
     }
+
+    pub fn html<S>(data: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Identity::Html(data.into())
+    }
 }
 
 impl Port {
