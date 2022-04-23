@@ -63,6 +63,7 @@ pub enum Identity {
     Float(f32),
     Double(f64),
     Quoted(String),
+    Html(String),
     ArrowName([Option<String>; 4]),
     RGBA(u8, u8, u8, u8),
     HSV(f32, f32, f32),
@@ -340,6 +341,13 @@ impl Identity {
     {
         Identity::String(data.into())
     }
+
+    pub fn html<S>(data: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Identity::Html(data.into())
+    }
 }
 
 impl Port {
@@ -417,7 +425,7 @@ impl std::fmt::Display for Identity {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         use Identity::*;
         match self {
-            RGBA(r, g, b, a) => write!(f, "\"#{:x}{:x}{:x}{:x}\"", r, g, b, a),
+            RGBA(r, g, b, a) => write!(f, "\"#{:0<2x}{:0<2x}{:0<2x}{:0<2x}\"", r, g, b, a),
             HSV(h, s, v) => write!(f, "\"{},+{},+{}\"", h, s, v),
             Point2D(x, y, fixed) => {
                 write!(f, "\"{},{}\"", x, y).and(if *fixed { write!(f, "!") } else { Ok(()) })
@@ -430,6 +438,7 @@ impl std::fmt::Display for Identity {
             Float(id) => write!(f, "{}", id),
             Double(id) => write!(f, "{}", id),
             Quoted(id) => write!(f, "{:?}", id),
+            Html(id) => write!(f, "< {} >", id),
             ISize(id) => write!(f, "{}", id),
             I8(id) => write!(f, "{}", id),
             U8(id) => write!(f, "{}", id),
