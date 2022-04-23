@@ -151,8 +151,9 @@ impl SubGraph {
     ///     A -> B;
     /// }
     /// ```
+    #[allow(clippy::self_named_constructors)]
     pub fn subgraph(id: Option<Identity>, list: StmtList) -> Self {
-        SubGraph::SubGraph {
+        Self::SubGraph {
             id,
             stmts: Box::new(list),
         }
@@ -389,13 +390,13 @@ impl std::fmt::Display for Graph {
         .and(if f.alternate() {
             let padding = f.width().unwrap_or(0) + 4;
             let buffer = format!("{:width$}", self.stmts, width = padding);
-            write!(f, "{{\n").and(
+            writeln!(f, "{{").and(
                 buffer
                     .trim()
-                    .split("\n")
+                    .split('\n')
                     .fold(Ok(()), |x, y| {
                         x.and(write!(f, "{}", " ".repeat(padding)))
-                            .and(write!(f, "{}\n", y))
+                            .and(writeln!(f, "{}", y))
                     })
                     .and(write!(f, "}}")),
             )
@@ -546,7 +547,7 @@ impl std::fmt::Display for StmtList {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         if let Some(w) = f.width() {
             self.0.iter().fold(Ok(()), |acc, x| {
-                acc.and(write!(f, "{:width$};\n", x, width = w))
+                acc.and(writeln!(f, "{:width$};", x, width = w))
             })
         } else {
             self.0
@@ -568,13 +569,13 @@ impl std::fmt::Display for SubGraph {
                 })
                 .and(if let Some(w) = f.width() {
                     let buffer = format!("{:width$}", stmts, width = w);
-                    write!(f, "{{\n").and(
+                    writeln!(f, "{{").and(
                         buffer
                             .trim()
-                            .split("\n")
+                            .split('\n')
                             .fold(Ok(()), |x, y| {
                                 x.and(write!(f, "{}", " ".repeat(w)))
-                                    .and(write!(f, "{}\n", y))
+                                    .and(writeln!(f, "{}", y))
                             })
                             .and(write!(f, "}}")),
                     )
@@ -584,13 +585,13 @@ impl std::fmt::Display for SubGraph {
             SubGraph::Cluster(stmts) => {
                 if let Some(w) = f.width() {
                     let buffer = format!("{:width$}", stmts, width = w);
-                    write!(f, "{{\n").and(
+                    writeln!(f, "{{").and(
                         buffer
                             .trim()
-                            .split("\n")
+                            .split('\n')
                             .fold(Ok(()), |x, y| {
                                 x.and(write!(f, "{}", " ".repeat(w)))
-                                    .and(write!(f, "{}\n", y))
+                                    .and(writeln!(f, "{}", y))
                             })
                             .and(write!(f, "}}")),
                     )
@@ -702,13 +703,19 @@ impl AttrList {
     }
 }
 
+impl Default for AttrList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StmtList {
     /// Create a new statement list
     pub fn new() -> Self {
         StmtList(Vec::new())
     }
     /// Add a statement
-    pub fn add(mut self, stmt: Stmt) -> Self {
+    pub fn add_stmt(mut self, stmt: Stmt) -> Self {
         self.0.push(stmt);
         self
     }
@@ -741,6 +748,12 @@ impl StmtList {
     pub fn add_equation(mut self, a: Identity, b: Identity) -> Self {
         self.0.push(Stmt::Equation(a, b));
         self
+    }
+}
+
+impl Default for StmtList {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
