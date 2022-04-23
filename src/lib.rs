@@ -148,7 +148,10 @@ mod test {
                     .add_node(Identity::id("c")?, None, None)
                     .add_node(Identity::id("d")?, None, None),
             ));
-        assert_eq!("a->b->{graph [color=\"#00a0fe5a\";];c;d;}[color=pink;]", edge.to_string());
+        assert_eq!(
+            "a->b->{graph [color=\"#00a0fe5a\";];c;d;}[color=pink;]",
+            edge.to_string()
+        );
         Ok(())
     }
 
