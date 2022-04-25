@@ -1,3 +1,4 @@
+![crates.io](https://img.shields.io/crates/v/tabbycat.svg)
 ![tabbycat](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Egyptian_Mau_Bronze.jpg/2560px-Egyptian_Mau_Bronze.jpg)
 # About
 This crate is used to generate dot graphs with types defined in rust.
