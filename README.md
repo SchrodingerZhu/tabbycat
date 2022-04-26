@@ -1,5 +1,8 @@
-![crates.io](https://img.shields.io/crates/v/tabbycat.svg)
 ![tabbycat](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Egyptian_Mau_Bronze.jpg/2560px-Egyptian_Mau_Bronze.jpg)
+
+![crates.io](https://img.shields.io/crates/v/tabbycat.svg)
+[![Rust](https://github.com/SchrodingerZhu/tabbycat/actions/workflows/rust.yml/badge.svg)](https://github.com/SchrodingerZhu/tabbycat/actions/workflows/rust.yml)
+
 # About
 This crate is used to generate dot graphs with types defined in rust.
 The whole crate is implemented following the dot language specification listed at [graphviz's website](https://graphviz.org/doc/info/lang.html).
